@@ -1,6 +1,6 @@
 // Service worker : le jeu fonctionne hors connexion après la première visite.
-const CACHE = 'iles-celestes-v2';
-const FILES = ['./', './index.html', './style.css', './art.js', './game.js', './manifest.json', './icon.svg'];
+const CACHE = 'iles-celestes-v3';
+const FILES = ['./', './index.html', './style.css', './lib/three.min.js', './models.js', './render3d.js', './game.js', './manifest.json', './icon.svg', './fonts/LilitaOne-latin.woff2'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));

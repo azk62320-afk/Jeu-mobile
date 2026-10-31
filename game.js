@@ -5,7 +5,6 @@
 // =====================================================================
 //  Constantes et données du jeu
 // =====================================================================
-const TW = 64, TH = 32;          // taille d'une case en projection isométrique
 const N = 24;                    // la grille fait N x N cases
 const CENTER = 12;               // case centrale (le Cœur occupe 11..13)
 const MAXL = 5;                  // niveau maximum
@@ -113,6 +112,33 @@ const TROOPS = {
     desc: 'Vole au-dessus des murs et lâche des bombes. Seuls les éclairs et le vent peuvent le toucher.' },
 };
 const TROOP_ORDER = Object.keys(TROOPS);
+const RARITY = { plumeur: '', archere: '', sapeur: 'rare', golem: 'rare', aeronef: 'epic' };
+
+// Ligues (selon les trophées de gloire)
+const LEAGUES = [
+  { n: 'Sans ligue', min: 0, c1: '#b4bac6', c2: '#6b7282' },
+  { n: 'Ligue Brise', min: 100, c1: '#e0a56a', c2: '#8a5226' },
+  { n: 'Ligue Rafale', min: 400, c1: '#eef3f8', c2: '#8d9bb0' },
+  { n: 'Ligue Bourrasque', min: 800, c1: '#ffe27a', c2: '#c98a12' },
+  { n: 'Ligue Tempête', min: 1300, c1: '#d8a8ff', c2: '#7a34d0' },
+  { n: 'Ligue Cyclone', min: 1900, c1: '#9af0ff', c2: '#1a86c0' },
+  { n: 'Ligue Ouragan', min: 2600, c1: '#ff9a7a', c2: '#b82a1a' },
+  { n: 'Ligue Céleste', min: 3400, c1: '#fff6b0', c2: '#e09a10' },
+];
+const leagueIdx = (g) => LEAGUES.reduce((a, l, i) => (g >= l.min ? i : a), 0);
+function badge(i, size = 44) {
+  const l = LEAGUES[i], id = `lg${i}_${size}`;
+  const wing = (m) => `<path transform="${m}" d="M14 18 C2 18 -2 30 4 42 C7 36 10 35 14 36 C9 30 10 24 14 22Z" fill="${l.c1}" stroke="#1a1a1a" stroke-width="2.5" stroke-linejoin="round"/>`;
+  return `<svg viewBox="-4 -6 72 74" width="${size}" height="${size}">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${l.c1}"/><stop offset="1" stop-color="${l.c2}"/></linearGradient></defs>
+    ${i >= 2 ? wing('') + wing('translate(64 0) scale(-1 1)') : ''}
+    ${i >= 6 ? `<path d="M20 6 L22 -4 L28 3 L32 -6 L36 3 L42 -4 L44 6 Z" fill="#ffd34a" stroke="#1a1a1a" stroke-width="2.5" stroke-linejoin="round"/>` : ''}
+    <path d="M32 4 L54 12 L52 38 Q48 54 32 62 Q16 54 12 38 L10 12 Z" fill="url(#${id})" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M32 10 L48 16 L46 37 Q43 49 32 55 Q21 49 18 37 L16 16 Z" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"/>
+    ${i === 0 ? '<circle cx="32" cy="33" r="7" fill="rgba(255,255,255,.6)"/>' : `<path d="M22 37 C21 27 30 22 37 25 C43 28 42 36 36 37 C32 38 30 34 33 32" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/><path d="M22 37 C21 27 30 22 37 25 C43 28 42 36 36 37 C32 38 30 34 33 32" fill="none" stroke="#1a1a1a" stroke-width="1.2" stroke-linecap="round" opacity=".5"/>`}
+    ${i >= 4 ? `<path d="M32 42 l4 5 -4 5 -4 -5Z" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>` : ''}
+  </svg>`;
+}
 
 // =====================================================================
 //  Utilitaires
@@ -136,8 +162,8 @@ const fmtTime = (s) => {
   if (s < 3600) return Math.floor(s / 60) + 'm' + (s % 60 ? ' ' + (s % 60) + 's' : '');
   return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
 };
-const costStr = (r, n) => `${RES[r].icon} ${fmt(n)}`;
-const iso = (x, y) => ({ x: (x - y) * TW / 2, y: (x + y) * TH / 2 });
+const ico = (r) => `<i class="ri ri-${r}"></i>`;
+const costStr = (r, n) => `${ico(r)}${fmt(n)}`;
 const hash = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
 
 // Forme de l'île (masque des cases de terre)
@@ -457,7 +483,7 @@ function genEnemy() {
   const a = rand(0, Math.PI * 2);
   return {
     name: `Île ${NAMES_A[randi(0, NAMES_A.length - 1)]} ${NAMES_B[randi(0, NAMES_B.length - 1)]}`,
-    L, bl, occ, forbid, total, got: { c: 0, b: 0 },
+    L, bl, occ, forbid, total, got: { c: 0, b: 0 }, glory: Math.max(0, S.glory + randi(-120, 120)),
     units: [], proj: [], phase: 'scout', time: BATTLE_TIME, sel: null, used: {},
     wind: { x: Math.cos(a), y: Math.sin(a) }, flash: 0, endT: 0,
     totalB: bl.filter((b) => !B[b.t].wall).length, destroyed: 0, coreDead: false, stars: 0, pct: 0,
@@ -544,6 +570,7 @@ function unitUpdate(u, dt) {
   u.moving = false;
   if (!b) return;
   if (distRect(u.x, u.y, b) <= d.range) {
+    { const s = B[b.t].size; u.dx = b.x + s / 2 - u.x; u.dy = b.y + s / 2 - u.y; }
     u.cd -= dt;
     if (u.cd > 0) return;
     u.cd = d.atk || 1;
@@ -561,7 +588,7 @@ function unitUpdate(u, dt) {
     const dmg = d.dps * (d.atk || 1);
     if (d.proj) {
       const s = B[b.t].size;
-      E.proj.push({ x: u.x, y: u.y, z: u.air ? 36 : 12, tgt: b, isU: false, tx: b.x + s / 2, ty: b.y + s / 2, tz: B[b.t].h / 2,
+      E.proj.push({ x: u.x, y: u.y, z: u.air ? 66 : 18, tgt: b, isU: false, tx: b.x + s / 2, ty: b.y + s / 2, tz: H3[b.t] * 21,
         dmg, spd: d.proj === 'bomb' ? 4 : 10, kind: d.proj, d0: 0 });
     } else damageBuilding(b, dmg);
     return;
@@ -575,7 +602,7 @@ function unitUpdate(u, dt) {
   const step = d.speed * wf * dt;
   const nx = u.x + dx * step, ny = u.y + dy * step;
   if (!u.air) { const w = wallAt(nx, ny); if (w && w !== b) { u.tg = w; return; } }
-  u.x = nx; u.y = ny; u.moving = true; u.face = dx - dy;
+  u.x = nx; u.y = ny; u.moving = true; u.dx = dx; u.dy = dy;
 }
 
 function defenseUpdate(b, dt) {
@@ -591,15 +618,15 @@ function defenseUpdate(b, dt) {
   }
   if (!best) { b.cd = 0.15; return; }
   b.cd = df.rate;
-  b.aim = Math.atan2(best.y - cy, best.x - cx);
+  b.aim = Math.atan2(best.y - cy, best.x - cx); b.fired = T;
   const dmg = df.dps[b.l] * df.rate;
   if (df.kind === 'zap') {
-    const pts = [{ x: cx, y: cy, z: d.h + 6 }];
+    const pts = [{ x: cx, y: cy, z: (H3[b.t] + b.l * 0.1) * 42 }];
     const hit = new Set();
     let cur = best, dm = dmg;
     for (let k = 0; k < df.chain && cur; k++) {
       hit.add(cur); damageUnit(cur, dm);
-      pts.push({ x: cur.x, y: cur.y, z: cur.air ? 36 : 10 });
+      pts.push({ x: cur.x, y: cur.y, z: cur.air ? 66 : 14 });
       dm *= 0.7;
       let nxt = null, nd = 2.6;
       for (const u of E.units) {
@@ -613,12 +640,13 @@ function defenseUpdate(b, dt) {
   } else {
     E.proj.push({ x: cx, y: cy, z: d.h, tgt: best, isU: true, dmg, spd: df.kind === 'gust' ? 8 : 13, kind: df.kind,
       knock: df.knock || 0, ox: cx, oy: cy, d0: 0 });
+    E.proj[E.proj.length - 1].z = (df.kind === 'gust' ? 1.0 : 1.2 + b.l * 0.05) * 42;
   }
 }
 
 function projUpdate(p, dt) {
   let tx, ty, tz;
-  if (p.isU) { tx = p.tgt.x; ty = p.tgt.y; tz = p.tgt.air ? 36 : 10; } else { tx = p.tx; ty = p.ty; tz = p.tz; }
+  if (p.isU) { tx = p.tgt.x; ty = p.tgt.y; tz = p.tgt.air ? 66 : 14; } else { tx = p.tx; ty = p.ty; tz = p.tz; }
   const dx = tx - p.x, dy = ty - p.y, dist = Math.hypot(dx, dy);
   if (!p.d0) { p.d0 = Math.max(dist, 0.01); p.z0 = p.z; }
   const step = p.spd * dt;
@@ -690,8 +718,8 @@ function startScout(free) {
   $('#hud-battle').classList.remove('hidden');
   resetCam();
   renderTroopbar(); renderBattleActions(); updateBattleHud();
-  const sx = E.wind.x - E.wind.y, sy = (E.wind.x + E.wind.y) / 2;
-  $('#wind-arrow').style.transform = `rotate(${Math.atan2(sy, sx)}rad)`;
+  R3.setBattle(E);
+  $('#wind-arrow').style.transform = `rotate(${R3.screenAngle(E.wind.x, E.wind.y)}rad)`;
   $('#b-timer').textContent = fmtClock(E.time);
 }
 
@@ -703,19 +731,22 @@ function endBattle() {
   let dg = 0;
   if (deployed > 0) { dg = E.stars > 0 ? 6 + E.stars * 8 + E.L * 2 : -Math.min(S.glory, 8); S.glory += dg; }
   save(); updateTopbar();
-  const stars = starsHtml(E.stars);
-  const title = deployed === 0 ? 'Retour au village' : E.stars === 3 ? 'Victoire totale !' : E.stars > 0 ? 'Victoire !' : 'Défaite…';
-  openModal(`
-    <h2>${title}</h2>
-    <div class="result-stars">${stars}</div>
-    <p style="text-align:center">Destruction : <b>${E.pct} %</b>${E.coreDead ? ' · Cœur détruit 🔮' : ''}</p>
-    <div class="result-loot"><span class="pill">💎 +${fmt(got.c)}</span><span class="pill">☁️ +${fmt(got.b)}</span><span class="pill">🏆 ${dg >= 0 ? '+' : ''}${dg}</span></div>
-    ${(got.c < E.got.c || got.b < E.got.b) ? '<p style="text-align:center;opacity:.8">Une partie du butin a été perdue : tes stockages sont pleins.</p>' : ''}
-    <div class="pb"><button class="btn green" data-a="home">🏝️ Retour à mon île</button></div>`, 'result');
+  const li = leagueIdx(S.glory);
+  const win = E.stars > 0;
+  const title = deployed === 0 ? 'Retour' : E.stars === 3 ? 'Victoire totale !' : win ? 'Victoire !' : 'Défaite';
+  openModal(`<h2>Résultats de la bataille</h2>
+    <div class="banner ${win ? 'win' : ''}">${title}</div>
+    <div class="result-stars">${starsHtml(E.stars)}</div>
+    <p style="text-align:center;font-size:20px">Destruction totale : <b>${E.pct} %</b></p>
+    <div class="result-loot"><span class="pill">${ico('c')}+${fmt(got.c)}</span><span class="pill">${ico('b')}+${fmt(got.b)}</span><span class="pill">${ico('g')}${dg >= 0 ? '+' : ''}${dg}</span></div>
+    <div class="lg-big" style="font-size:18px">${badge(li, 64)}<span>${LEAGUES[li].n}</span></div>
+    ${(got.c < E.got.c || got.b < E.got.b) ? '<p style="text-align:center">Une partie du butin a été perdue : tes réserves sont pleines.</p>' : ''}
+    <div class="pb"><button class="btn green" data-a="home">Retour au village</button></div>`, 'result');
 }
 
 function goHome() {
   E = null; mode = 'village'; FX.length = 0;
+  R3.setBattle(null);
   closeModal();
   $('#hud-battle').classList.add('hidden');
   $('#hud-village').classList.remove('hidden');
@@ -732,315 +763,46 @@ function addFx(k, x, y, o = {}) {
 }
 
 // =====================================================================
-//  Caméra et rendu
+//  Rendu 3D (voir render3d.js et models.js)
 // =====================================================================
-const cv = $('#cv'), ctx = cv.getContext('2d');
-let W = 0, H = 0, DPR = 1, mode = 'village', T = 0;
-const cam = { x: 0, y: 0, z: 1 };
-let zMin = 0.3, zMax = 2.2;
+const cv = $('#cv');
+let W = 0, H = 0, mode = 'village', T = 0;
+function resize() { W = innerWidth; H = innerHeight; R3.resize(W, H); }
+function resetCam() { R3.resetCam(); }
+function s2w(sx, sy) { return R3.screenToTile(sx, sy); }
 
-function resize() {
-  DPR = Math.min(2, window.devicePixelRatio || 1);
-  W = innerWidth; H = innerHeight;
-  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
-  cv.style.width = W + 'px'; cv.style.height = H + 'px';
-  zMin = Math.min(W / (N * TW), H / (N * TH + 160)) * 0.9;
-  cam.z = clamp(cam.z, zMin, zMax);
-}
-function resetCam() {
-  const c = iso(N / 2, N / 2);
-  cam.x = c.x; cam.y = c.y + 30; cam.z = clamp(zMin * 2, zMin, zMax);
-}
-function clampCam() {
-  cam.x = clamp(cam.x, -N * TW / 2, N * TW / 2);
-  cam.y = clamp(cam.y, 0, N * TH + 120);
-}
-function s2w(sx, sy) {
-  const ix = (sx - W / 2) / cam.z + cam.x, iy = (sy - H / 2) / cam.z + cam.y;
-  return { x: (ix / (TW / 2) + iy / (TH / 2)) / 2, y: (iy / (TH / 2) - ix / (TW / 2)) / 2, ix, iy };
-}
-function zoomAt(px, py, nz) {
-  const ix = (px - W / 2) / cam.z + cam.x, iy = (py - H / 2) / cam.z + cam.y;
-  cam.z = clamp(nz, zMin, zMax);
-  cam.x = ix - (px - W / 2) / cam.z; cam.y = iy - (py - H / 2) / cam.z;
-  clampCam();
-}
+// Hauteur (en cases) du haut de chaque bâtiment, pour placer les étiquettes
+const H3 = { core: 2.5, mine: 1.15, puits: 1.6, coffre: 1.15, reservoir: 1.75, perchoir: 2.3, nid: 1.15, baliste: 1.35, eclair: 2.6, vent: 1.45, mur: 0.75 };
+const bHeight = (b) => (b.l === 0 && mode === 'village' ? 1.2 : H3[b.t] + Math.max(1, b.l || 1) * 0.1);
 
-// ----- Île pré-dessinée -----
-const ISL = { c: null, ox: N * TW / 2 + 20, oy: 20, w: N * TW + 40, h: N * TH + 220, s: 1.5 };
-function renderIsland() {
-  const c = document.createElement('canvas');
-  c.width = ISL.w * ISL.s; c.height = ISL.h * ISL.s;
-  const g = c.getContext('2d');
-  g.scale(ISL.s, ISL.s); g.translate(ISL.ox, ISL.oy);
-  const depth = (x, y) => 40 + hash(x, y) * 90 + (x + y > N ? 20 : 0);
-  const poly = (pts, fill) => { g.beginPath(); g.moveTo(pts[0].x, pts[0].y); for (const p of pts.slice(1)) g.lineTo(p.x, p.y); g.closePath(); g.fillStyle = fill; g.fill(); };
-  for (let s = 0; s < 2 * N; s++) for (let x = 0; x <= s; x++) {
-    const y = s - x;
-    if (!isLand(x, y)) continue;
-    const top = iso(x, y), right = iso(x + 1, y), bottom = iso(x + 1, y + 1), left = iso(x, y + 1);
-    if (!isLand(x + 1, y)) { // face droite
-      const d1 = depth(x + 1, y), d2 = depth(x + 1, y + 1);
-      const gr = g.createLinearGradient(0, right.y, 0, right.y + Math.max(d1, d2));
-      gr.addColorStop(0, '#9a7452'); gr.addColorStop(0.5, '#7b5a3e'); gr.addColorStop(1, '#5a4030');
-      poly([right, bottom, { x: bottom.x, y: bottom.y + d2 }, { x: right.x, y: right.y + d1 }], gr);
-      poly([right, bottom, { x: bottom.x, y: bottom.y + 6 }, { x: right.x, y: right.y + 6 }], '#5fa041');
-    }
-    if (!isLand(x, y + 1)) { // face gauche
-      const d1 = depth(x, y + 1), d2 = depth(x + 1, y + 1);
-      const gr = g.createLinearGradient(0, left.y, 0, left.y + Math.max(d1, d2));
-      gr.addColorStop(0, '#80603f'); gr.addColorStop(0.5, '#644830'); gr.addColorStop(1, '#463224');
-      poly([left, bottom, { x: bottom.x, y: bottom.y + d2 }, { x: left.x, y: left.y + d1 }], gr);
-      poly([left, bottom, { x: bottom.x, y: bottom.y + 6 }, { x: left.x, y: left.y + 6 }], '#4f8c35');
-    }
-    const h = hash(x, y);
-    const base = (x + y) % 2 ? [124, 196, 92] : [116, 188, 84];
-    const v = (h - 0.5) * 14;
-    poly([top, right, bottom, left], `rgb(${base[0] + v | 0},${base[1] + v | 0},${base[2] + v | 0})`);
-    if (h > 0.82) { // petites fleurs
-      const p = iso(x + 0.3 + hash(y, x) * 0.4, y + 0.3 + h * 0.4);
-      g.fillStyle = h > 0.92 ? '#fff6a8' : '#ffd1ec';
-      g.beginPath(); g.arc(p.x, p.y, 2.2, 0, 7); g.fill();
-    }
+function bInfo(b, battle) {
+  const d = B[b.t], o = { hp: null, timer: null, prog: 0, bubble: null, full: false, name: null };
+  if (battle) { if (!b.dead && b.hp < b.max) o.hp = b.hp / b.max; return o; }
+  if (b.ue) {
+    const total = d.time[b.l + 1] * 1000 || 1, rem = Math.max(0, b.ue - now());
+    o.timer = fmtTime(rem / 1000); o.prog = clamp(1 - rem / total, 0, 1);
   }
-  ISL.c = c;
+  if (d.prod && b.l > 0 && b.st >= Math.max(10, d.cap[b.l] * 0.08)) { o.bubble = RES[d.prod].icon; o.full = b.st >= d.cap[b.l]; }
+  if (b === sel) o.name = `${d.name}<small>${b.l === 0 ? 'En construction' : 'Niveau ' + b.l}</small>`;
+  return o;
 }
 
-// ----- Nuages en arrière-plan -----
-const CLOUDS = Array.from({ length: 9 }, () => ({ x: Math.random(), y: Math.random(), s: rand(0.6, 1.4), v: rand(0.006, 0.016) }));
-function drawBackground(dt) {
-  const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#3d8fe0'); g.addColorStop(0.6, '#8fcaf5'); g.addColorStop(1, '#d8f0ff');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  let wx = 1, wy = 0;
-  if (E) { wx = E.wind.x - E.wind.y; wy = (E.wind.x + E.wind.y) / 2; const l = Math.hypot(wx, wy) || 1; wx /= l; wy /= l; }
-  const sp = E ? 3 : 1;
-  for (const c of CLOUDS) {
-    c.x += c.v * wx * dt * sp; c.y += c.v * wy * dt * sp;
-    if (c.x > 1.25) c.x = -0.25; if (c.x < -0.25) c.x = 1.25;
-    if (c.y > 1.15) c.y = -0.15; if (c.y < -0.15) c.y = 1.15;
-    const x = c.x * W, y = c.y * H, r = 34 * c.s;
-    ctx.fillStyle = 'rgba(255,255,255,0.75)';
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, 7); ctx.arc(x + r * 0.9, y + r * 0.2, r * 0.75, 0, 7);
-    ctx.arc(x - r * 0.9, y + r * 0.25, r * 0.65, 0, 7); ctx.arc(x + r * 0.2, y - r * 0.45, r * 0.7, 0, 7);
-    ctx.fill();
-  }
-}
-
-// ----- Dessin des éléments -----
-function polyPath(pts) { ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y); ctx.closePath(); }
-function footprint(x, y, s, inset = 0) {
-  return [iso(x + inset, y + inset), iso(x + s - inset, y + inset), iso(x + s - inset, y + s - inset), iso(x + inset, y + s - inset)];
-}
-function drawBox(x, y, s, h, col, inset = 0.1) {
-  const [a, b, c, d] = footprint(x, y, s, inset);
-  const up = (p) => ({ x: p.x, y: p.y - h });
-  polyPath([d, c, up(c), up(d)]); ctx.fillStyle = shade(col, -0.38); ctx.fill();
-  polyPath([c, b, up(b), up(c)]); ctx.fillStyle = shade(col, -0.2); ctx.fill();
-  polyPath([up(a), up(b), up(c), up(d)]); ctx.fillStyle = col; ctx.fill();
-  ctx.strokeStyle = shade(col, 0.3); ctx.lineWidth = 1.5; ctx.stroke();
-}
-function text(str, x, y, size, color = '#fff', stroke = true) {
-  ctx.font = `bold ${size}px "Trebuchet MS", system-ui, sans-serif`;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  if (stroke) { ctx.lineWidth = size / 4; ctx.strokeStyle = 'rgba(0,0,0,.65)'; ctx.strokeText(str, x, y); }
-  ctx.fillStyle = color; ctx.fillText(str, x, y);
-}
-function emoji(str, x, y, size) {
-  ctx.font = `${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000';
-  ctx.fillText(str, x, y);
-}
-function bar(x, y, w, frac, col) {
-  ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(x - w / 2 - 1, y - 1, w + 2, 6);
-  ctx.fillStyle = col; ctx.fillRect(x - w / 2, y, w * clamp(frac, 0, 1), 4);
-}
-
-function drawBuilding(b, battle, ctxInfo) {
-  const d = B[b.t], s = d.size;
-  const c = iso(b.x + s / 2, b.y + s / 2);
-  const tf = 1 / cam.z;
-  // ombre au sol
-  polyPath(footprint(b.x, b.y, s, d.wall ? 0.2 : 0.04)); ctx.fillStyle = 'rgba(40,70,30,.25)'; ctx.fill();
-
-  if (!battle && b.l === 0) { // en construction
-    Art.building(ctx, b, c.x, c.y, T, { scaffold: true, size: s });
-    text(fmtTime((b.ue - now()) / 1000), c.x, c.y - 50 - s * 4, Math.max(10, 12 * tf), '#ffe27a');
-    return;
-  }
-  const h = d.h + ((b.l || 1) - 1) * 4;
-  const o = { aim: b.aim ?? (T * 0.4 + b.id * 1.7) };
-  if (d.store) o.fill = battle ? 0.9 : S.res[d.store] / capOf(d.store);
-  if (d.wall && ctxInfo) { o.nU = ctxInfo.walls.has(b.y * N + b.x + 1) && b.x + 1 < N; o.nV = ctxInfo.walls.has((b.y + 1) * N + b.x); }
-  if (b.hit > 0) ctx.globalAlpha = 0.65;
-  Art.building(ctx, b, c.x, c.y, T, o);
-  ctx.globalAlpha = 1;
-
-  if (!battle) {
-    if (b.ue) {
-      emoji('🔨', c.x + 18, c.y - h - 20 + Math.abs(Math.sin(T * 6)) * -6, 18);
-      text(fmtTime((b.ue - now()) / 1000), c.x, c.y - h - 36, Math.max(10, 12 * tf), '#ffe27a');
-    }
-    if (d.prod && b.st >= Math.max(10, d.cap[b.l] * 0.08)) { // bulle de récolte
-      const by = c.y - h - 22 + Math.sin(T * 4 + b.id) * 3;
-      ctx.fillStyle = 'rgba(255,255,255,.92)';
-      ctx.beginPath(); ctx.arc(c.x, by, 14, 0, 7); ctx.fill();
-      ctx.strokeStyle = b.st >= d.cap[b.l] ? '#ff5050' : '#3a62c9'; ctx.lineWidth = 2; ctx.stroke();
-      emoji(RES[d.prod].icon, c.x, by + 1, 16);
-    }
-  } else if (b.hp < b.max) {
-    bar(c.x, c.y - h - 14, d.wall ? 22 : 40, b.hp / b.max, b.hp / b.max > 0.5 ? '#6fe06a' : b.hp / b.max > 0.25 ? '#ffd25a' : '#ff5a4a');
-  }
-}
-
-// Décor : arbres et rochers sur les cases libres
-const DECO = [];
-for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-  if (!isLand(x, y)) continue;
-  const h = hash(x * 3.1, y * 7.3);
-  const far = Math.max(Math.abs(x - CENTER), Math.abs(y - CENTER)) >= 6;
-  if ((far && h > 0.86) || h > 0.97) DECO.push({ x, y, kind: h > 0.95 ? 2 : (hash(y, x) > 0.5 ? 1 : 0), seed: hash(x, y * 2) });
-}
-
-function drawRubble(b) {
-  const s = B[b.t].size;
-  polyPath(footprint(b.x, b.y, s, 0.12)); ctx.fillStyle = '#6b5d50'; ctx.fill();
-  for (let i = 0; i < s * 3; i++) {
-    const p = iso(b.x + 0.2 + hash(b.id, i) * (s - 0.4), b.y + 0.2 + hash(i, b.id) * (s - 0.4));
-    ctx.fillStyle = i % 2 ? '#8a7a6a' : '#4f4339';
-    ctx.beginPath(); ctx.arc(p.x, p.y - 2, 3 + hash(i, i + b.id) * 3, 0, 7); ctx.fill();
-  }
-}
-
-function drawUnit(u) {
-  const p = iso(u.x, u.y);
-  const lift = u.air ? 36 : 0;
-  const k = clamp(0.6 / cam.z, 1, 1.8) * (u.t === 'golem' ? 1.1 : 1);
-  ctx.fillStyle = 'rgba(0,0,0,.28)';
-  ctx.beginPath(); ctx.ellipse(p.x, p.y, (u.air ? 14 : 7) * k, (u.air ? 6 : 3.5) * k, 0, 0, 7); ctx.fill();
-  ctx.strokeStyle = 'rgba(90,170,255,.8)'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.ellipse(p.x, p.y, 8 * k, 4 * k, 0, 0, 7); ctx.stroke();
-  ctx.save();
-  ctx.translate(p.x, p.y - lift);
-  ctx.scale(u.face < 0 ? -k : k, k);
-  if (u.hit > 0) ctx.globalAlpha = 0.55;
-  Art.unit(ctx, u.t, T + u.ph, u.moving, u.lunge > 0 ? u.lunge / 0.3 : 0);
-  ctx.restore();
-  const top = { plumeur: 31, archere: 33, sapeur: 38, golem: 48, aeronef: 42 }[u.t] || 32;
-  if (u.hp < u.max) bar(p.x, p.y - lift - top * k - 4, 20, u.hp / u.max, '#5ab0ff');
-}
-
-function drawProj(p) {
-  const a = iso(p.x, p.y);
-  const y = a.y - p.z;
-  if (p.kind === 'bolt' || p.kind === 'arrow') {
-    const v = iso(p.x + (p.vx || 0) * 0.5, p.y + (p.vy || 0) * 0.5), dx = v.x - a.x, dy = v.y - a.y, l = Math.hypot(dx, dy) || 1;
-    const len = p.kind === 'bolt' ? 16 : 10;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = p.kind === 'bolt' ? '#5a3d22' : '#7a5230'; ctx.lineWidth = p.kind === 'bolt' ? 3 : 1.5;
-    ctx.beginPath(); ctx.moveTo(a.x - dx / l * len, y - dy / l * len); ctx.lineTo(a.x, y); ctx.stroke();
-    ctx.fillStyle = '#dfe6ee'; ctx.beginPath(); ctx.arc(a.x, y, p.kind === 'bolt' ? 2.5 : 1.5, 0, 7); ctx.fill();
-  }
-  else if (p.kind === 'bomb') { ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(a.x, y, 4.5, 0, 7); ctx.fill(); }
-  else if (p.kind === 'gust') {
-    ctx.strokeStyle = 'rgba(230,250,255,.9)'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(a.x, y, 7, T * 10, T * 10 + 4.5); ctx.stroke();
-  }
-}
-
-function drawFx(f) {
-  const k = f.t / f.max, p = iso(f.x, f.y);
-  if (f.k === 'boom') {
-    ctx.globalAlpha = 1 - k;
-    ctx.fillStyle = '#ffb347';
-    ctx.beginPath(); ctx.ellipse(p.x, p.y - 10, 10 + k * 40 * f.r, (10 + k * 40 * f.r) * 0.6, 0, 0, 7); ctx.fill();
-    ctx.fillStyle = '#fff2b0';
-    ctx.beginPath(); ctx.ellipse(p.x, p.y - 10, 4 + k * 18 * f.r, (4 + k * 18 * f.r) * 0.6, 0, 0, 7); ctx.fill();
-    ctx.globalAlpha = 1;
-  } else if (f.k === 'puff') {
-    ctx.globalAlpha = 1 - k;
-    ctx.fillStyle = '#ffffff';
-    const r = (f.small ? 6 : 9) + k * 14;
-    const z = f.air ? 36 : 6;
-    ctx.beginPath(); ctx.arc(p.x - 5, p.y - z, r * 0.7, 0, 7); ctx.arc(p.x + 5, p.y - z - 2, r * 0.6, 0, 7); ctx.arc(p.x, p.y - z - 6, r * 0.6, 0, 7); ctx.fill();
-    ctx.globalAlpha = 1;
-  } else if (f.k === 'text') {
-    ctx.globalAlpha = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
-    text(f.text, p.x, p.y - 50 - k * 40, Math.max(13, 15 / cam.z), f.color);
-    ctx.globalAlpha = 1;
-  } else if (f.k === 'zap') {
-    ctx.globalAlpha = 1 - k;
-    for (const [w, col] of [[7, 'rgba(255,240,120,.5)'], [2.5, '#ffffff']]) {
-      ctx.strokeStyle = col; ctx.lineWidth = w;
-      ctx.beginPath();
-      f.pts.forEach((q, i) => {
-        const a = iso(q.x, q.y);
-        if (i === 0) { ctx.moveTo(a.x, a.y - q.z); return; }
-        const prev = iso(f.pts[i - 1].x, f.pts[i - 1].y);
-        const mx = (prev.x + a.x) / 2 + rand(-8, 8), my = (prev.y - f.pts[i - 1].z + a.y - q.z) / 2 + rand(-8, 8);
-        ctx.lineTo(mx, my); ctx.lineTo(a.x, a.y - q.z);
-      });
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-  }
-}
-
-function draw(dt) {
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  drawBackground(dt);
-  ctx.setTransform(DPR * cam.z, 0, 0, DPR * cam.z, DPR * (W / 2 - cam.x * cam.z), DPR * (H / 2 - cam.y * cam.z));
-  ctx.drawImage(ISL.c, -ISL.ox, -ISL.oy, ISL.w, ISL.h);
-
-  const battle = mode === 'battle' && E;
-  const list = battle ? E.bl : S.bl;
-
-  // Zones interdites (combat)
-  if (battle && E.phase !== 'end' && (E.flash > 0 || E.phase === 'scout')) {
-    const a = E.flash > 0 ? Math.min(1, E.flash) * 0.45 : 0.12;
-    ctx.fillStyle = `rgba(255,60,60,${a})`;
-    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++)
-      if (E.forbid[y * N + x] && isLand(x, y)) { polyPath(footprint(x, y, 1)); ctx.fill(); }
-  }
-  // Sélection / placement
-  if (!battle) {
-    const g = placing ? placing.b : sel;
-    if (g) {
-      const ok = !placing || validPos(S.bl, g);
-      polyPath(footprint(g.x, g.y, B[g.t].size));
-      ctx.fillStyle = ok ? 'rgba(120,255,120,.35)' : 'rgba(255,80,80,.45)'; ctx.fill();
-      ctx.strokeStyle = ok ? '#ffffff' : '#ff4040'; ctx.lineWidth = 2; ctx.stroke();
-    }
-  }
-  if (battle) for (const b of E.bl) if (b.dead) drawRubble(b);
-
-  // Tri par profondeur
-  const items = [], occ = new Set(), walls = new Set();
-  for (const b of list) {
-    const s = B[b.t].size;
-    for (let j = 0; j < s; j++) for (let i = 0; i < s; i++) occ.add((b.y + j) * N + b.x + i);
-    if (battle && b.dead) continue;
-    if (B[b.t].wall && b.l > 0) walls.add(b.y * N + b.x);
-  }
-  const info = { walls };
-  for (const b of list) {
-    if (battle && b.dead) continue;
-    const s = B[b.t].size;
-    items.push({ d: b.x + b.y + s, f: () => drawBuilding(b, battle, info) });
-  }
-  for (const t of DECO) {
-    if (occ.has(t.y * N + t.x)) continue;
-    const c = iso(t.x + 0.5, t.y + 0.5);
-    items.push({ d: t.x + t.y + 1, f: () => Art.deco(ctx, t.kind, c.x, c.y, T, t.seed) });
-  }
-  if (placing) { const b = placing.b, s = B[b.t].size; items.push({ d: b.x + b.y + s + 0.01, f: () => { ctx.globalAlpha = 0.85; drawBuilding(Object.assign({}, b, { l: 1, ue: 0 }), false, info); ctx.globalAlpha = 1; } }); }
-  if (battle) for (const u of E.units) items.push({ d: u.x + u.y + (u.air ? 100 : 0), f: () => drawUnit(u) });
-  items.sort((a, b) => a.d - b.d);
-  for (const it of items) it.f();
-
-  if (battle) for (const p of E.proj) drawProj(p);
-  for (const f of FX) drawFx(f);
+function draw3d(dt) {
+  const battle = mode === 'battle' && !!E;
+  R3.render(dt, {
+    T, battle,
+    list: battle ? E.bl : S.bl,
+    units: battle ? E.units : [], proj: battle ? E.proj : [], fx: FX,
+    placing: placing ? placing.b : null,
+    placingValid: placing ? validPos(S.bl, placing.b) : false,
+    sel,
+    size: (b) => B[b.t].size,
+    height: bHeight,
+    fill: (b) => (B[b.t].store ? (battle ? 0.9 : S.res[B[b.t].store] / capOf(B[b.t].store)) : 0),
+    info: (b) => bInfo(b, battle),
+    forbidAlpha: battle && E.phase !== 'end' ? (E.flash > 0 ? Math.min(1, E.flash) * 0.5 : E.phase === 'scout' ? 0.18 : 0) : 0,
+    wind: battle ? E.wind : null,
+  });
 }
 
 // =====================================================================
@@ -1054,71 +816,82 @@ function toast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-let topCache = '';
+let topCache = '', lastLeague = -1;
 function updateTopbar() {
   const cc = capOf('c'), cb = capOf('b');
   const key = [S.res.c | 0, S.res.b | 0, cc, cb, busyBuilders(), S.glory, armyCount()].join();
   if (key === topCache) return;
   topCache = key;
-  $('#res-c b').textContent = `${fmt(S.res.c)} / ${fmt(cc)}`;
-  $('#res-b b').textContent = `${fmt(S.res.b)} / ${fmt(cb)}`;
-  $('#res-c .bar i').style.width = (S.res.c / cc * 100) + '%';
-  $('#res-b .bar i').style.width = (S.res.b / cb * 100) + '%';
-  $('#chip-builders b').textContent = `${BUILDERS - busyBuilders()}/${BUILDERS}`;
-  $('#chip-glory b').textContent = S.glory;
+  for (const [r, cap] of [['c', cc], ['b', cb]]) {
+    const el = $('#res-' + r);
+    el.querySelector('.val').textContent = fmt(S.res[r]);
+    el.querySelector('.max').textContent = 'Max : ' + fmt(cap);
+    el.querySelector('.fill').style.width = (S.res[r] / cap * 100) + '%';
+  }
+  $('#builders-val').textContent = `${BUILDERS - busyBuilders()}/${BUILDERS}`;
+  const li = leagueIdx(S.glory);
+  if (li !== lastLeague) { lastLeague = li; $('#league-badge').innerHTML = badge(li, 46); $('#league-name').textContent = LEAGUES[li].n; }
+  $('#glory-val').textContent = S.glory;
   $('#army-badge').textContent = armyCount();
 }
 
 function statsHtml(b) {
   const d = B[b.t], l = Math.max(1, b.l), n = Math.min(MAXL, l + 1), up = b.l < MAXL && b.l > 0;
   const nx = (arr) => (up && arr[n] !== arr[l] ? ` <em>→ ${fmt(arr[n])}</em>` : '');
-  const out = [`❤️ ${fmt(d.hp[l])}${nx(d.hp)}`];
-  if (b.t === 'core') out.push(`📦 +${fmt(1000 * l)} de stockage`);
-  if (d.prod) out.push(`${RES[d.prod].icon} ${fmt(d.rate[l])}/h${nx(d.rate)}`, `📦 ${fmt(d.cap[l])}${nx(d.cap)}`);
-  if (d.store) out.push(`📦 ${RES[d.store].icon} ${fmt(d.cap[l])}${nx(d.cap)}`);
-  if (b.t === 'nid') out.push(`👥 ${d.cap[l]} places${nx(d.cap)}`);
-  if (b.t === 'perchoir') out.push('Troupes : ' + TROOP_ORDER.filter((t) => TROOPS[t].unlock <= l).map((t) => TROOPS[t].icon).join(' ')
-    + (up ? ` <em>→ ${TROOPS[TROOP_ORDER[n - 1]].icon}</em>` : ''));
-  if (d.def) out.push(`💥 ${d.def.dps[l]}/s${nx(d.def.dps)}`, `📏 ${d.def.range}`, d.def.air && d.def.ground ? '🎯 Sol + Air' : '🎯 Sol');
-  return out.map((s) => `<span>${s}</span>`).join('');
+  const out = [`❤️ PV : ${fmt(d.hp[l])}${nx(d.hp)}`];
+  if (b.t === 'core') out.push(`📦 Stockage : +${fmt(1000 * l)}`);
+  if (d.prod) out.push(`${ico(d.prod)} ${fmt(d.rate[l])} / h${nx(d.rate)}`, `📦 Réserve : ${fmt(d.cap[l])}${nx(d.cap)}`);
+  if (d.store) out.push(`📦 ${ico(d.store)} ${fmt(d.cap[l])}${nx(d.cap)}`);
+  if (b.t === 'nid') out.push(`👥 Places : ${d.cap[l]}${nx(d.cap)}`);
+  if (b.t === 'perchoir') out.push('Troupes : ' + TROOP_ORDER.filter((t) => TROOPS[t].unlock <= l).map((t) => TROOPS[t].name.split(' ')[0]).join(', '));
+  if (d.def) out.push(`💥 Dégâts : ${d.def.dps[l]}/s${nx(d.def.dps)}`, `📏 Portée : ${d.def.range}`, d.def.air && d.def.ground ? '🎯 Sol et air' : '🎯 Sol uniquement');
+  return out.map((x) => `<span>${x}</span>`).join('');
 }
+
+const act = (a, icon, label, extra = '', cls = '') => `<button class="act ${cls}" data-a="${a}"><span class="ai">${icon}</span><span class="al">${label}</span>${extra}</button>`;
 
 function renderPanel() {
   const p = $('#panel');
-  if (mode !== 'village' || (!sel && !placing)) { p.classList.add('hidden'); return; }
+  const open = mode === 'village' && (sel || placing);
+  $('#hud-village').classList.toggle('panel-open', !!open);
+  if (!open) { p.classList.add('hidden'); return; }
   p.classList.remove('hidden');
   if (placing) {
-    const t = placing.b.t, d = B[t];
-    p.innerHTML = `<div class="ph"><img class="pi" src="${Art.thumb('b', t, 1, d.size)}" alt=""><div><b>${d.name}</b><small>Fais glisser le bâtiment pour le placer</small></div></div>
-      <div class="pb"><button class="btn green" data-a="place">✔ Construire · ${costStr(d.res, d.cost[1])}</button><button class="btn grey" data-a="cancel">✖</button></div>`;
+    const d = B[placing.b.t];
+    p.innerHTML = `<div class="place-info">${d.name} · ${costStr(d.res, d.cost[1])}</div>
+      <div class="acts">${act('cancel', '✖', 'Annuler', '', 'red')}${act('place', '✔', 'Placer', '', 'green')}</div>`;
     return;
   }
-  const b = sel, d = B[b.t];
-  const why = upgradeBlock(b);
-  let btns = '';
-  if (b.ue) btns += `<button class="btn gold" data-a="speed">⚡ Finir maintenant · 💎 <span id="p-speed">${fmt(speedCost(b))}</span></button>`;
-  else if (why) btns += `<button class="btn" disabled>${why}</button>`;
-  else btns += `<button class="btn green" data-a="upgrade">⬆️ Niveau ${b.l + 1} · ${costStr(d.res, d.cost[b.l + 1])}${d.time[b.l + 1] ? ' · ⏱ ' + fmtTime(d.time[b.l + 1]) : ''}</button>`;
-  if (d.prod && b.l > 0) btns += `<button class="btn" data-a="collect">Récolter ${RES[d.prod].icon}</button>`;
-  if ((b.t === 'perchoir' || b.t === 'nid') && b.l > 0) btns += `<button class="btn" data-a="army">🐦 Armée</button>`;
-  btns += `<button class="btn grey" data-a="deselect">✖</button>`;
-  p.innerHTML = `<div class="ph"><img class="pi" src="${Art.thumb('b', b.t, Math.max(1, b.l), d.size)}" alt=""><div><b>${d.name}</b><small>${b.l === 0 ? 'En construction' : 'Niveau ' + b.l} · ${d.desc}</small></div></div>
-    <div class="stats">${b.l > 0 ? statsHtml(b) : ''}</div><div class="live" id="p-live"></div>
-    <div class="pb">${btns}</div>`;
-  liveUpdate();
+  const b = sel, d = B[b.t], why = upgradeBlock(b);
+  let h = act('info', 'ℹ️', 'Infos');
+  if (b.ue) h += act('speed', '⚡', 'Finir', `<span class="ac">${ico('c')}<span id="p-speed">${fmt(speedCost(b))}</span></span>`, 'gold');
+  else if (why) h += act('why', '⬆️', why.length > 12 ? 'Bloqué' : why, '', 'off');
+  else h += act('upgrade', '⬆️', 'Améliorer', `<span class="ac">${costStr(d.res, d.cost[b.l + 1])}</span>`, 'green');
+  if (d.prod && b.l > 0) h += act('collect', d.prod === 'c' ? '💎' : '☁️', 'Récolter');
+  if ((b.t === 'perchoir' || b.t === 'nid') && b.l > 0) h += act('army', '🪶', 'Troupes');
+  p.innerHTML = `<div class="acts">${h}</div>`;
 }
 
 function liveUpdate() {
-  if (!sel || placing) return;
-  const el = $('#p-live');
-  if (!el) return;
-  const b = sel, d = B[b.t];
-  let s = '';
-  if (b.ue) s = `⏱ ${b.l === 0 ? 'Construction' : 'Amélioration'} : ${fmtTime((b.ue - now()) / 1000)} restantes`;
-  if (d.prod && b.l > 0) s += (s ? ' · ' : '') + `Stocké : ${fmt(b.st)} / ${fmt(d.cap[b.l])} ${RES[d.prod].icon}`;
-  if (el.textContent !== s) el.textContent = s;
   const sp = $('#p-speed');
-  if (sp && b.ue) sp.textContent = fmt(speedCost(b));
+  if (sp && sel && sel.ue) sp.textContent = fmt(speedCost(sel));
+  const il = $('#info-live');
+  if (il && sel) {
+    const d = B[sel.t];
+    let s = sel.ue ? `⏱ ${sel.l === 0 ? 'Construction' : 'Amélioration'} : ${fmtTime((sel.ue - now()) / 1000)}` : '';
+    if (d.prod && sel.l > 0) s += (s ? ' · ' : '') + `Stocké : ${fmt(sel.st)} / ${fmt(d.cap[sel.l])}`;
+    il.textContent = s;
+  }
+}
+
+function openInfo(b) {
+  const d = B[b.t], why = upgradeBlock(b);
+  openModal(`<h2>${d.name}</h2>
+    <div class="info-head"><img src="${Models.thumb('b', b.t, Math.max(1, b.l))}" alt="">
+      <div><p><b>${b.l === 0 ? 'En construction' : 'Niveau ' + b.l}</b></p><p>${d.desc}</p><p id="info-live"></p></div></div>
+    <div class="stats">${b.l > 0 ? statsHtml(b) : ''}</div>
+    ${!b.ue && !why ? `<div class="pb"><button class="btn green" data-a="upgrade-m">⬆️ Niveau ${b.l + 1} · ${costStr(d.res, d.cost[b.l + 1])}${d.time[b.l + 1] ? ' · ⏱ ' + fmtTime(d.time[b.l + 1]) : ''}</button></div>` : why && !b.ue ? `<p>🔒 ${why}</p>` : ''}`, 'info');
+  liveUpdate();
 }
 
 $('#panel').addEventListener('click', (e) => {
@@ -1128,33 +901,42 @@ $('#panel').addEventListener('click', (e) => {
   else if (a === 'cancel') { placing = null; renderPanel(); }
   else if (a === 'upgrade') startUpgrade(sel);
   else if (a === 'speed') speedUp(sel);
-  else if (a === 'collect') { collect(sel); liveUpdate(); }
+  else if (a === 'collect') collect(sel);
   else if (a === 'army') openArmy();
-  else if (a === 'deselect') { sel = null; renderPanel(); }
+  else if (a === 'info') openInfo(sel);
+  else if (a === 'why') toast(upgradeBlock(sel));
 });
 
 // ----- Fenêtres -----
 let modalKind = null;
 function openModal(html, kind) {
   modalKind = kind;
-  $('#modal .content').innerHTML = html;
+  const m = html.match(/^\s*<h2>([\s\S]*?)<\/h2>/);
+  $('#modal .title').innerHTML = m ? m[1] : '';
+  $('#modal .content').innerHTML = m ? html.slice(m[0].length) : html;
   $('#modal').classList.remove('hidden');
   $('#modal .close').classList.toggle('hidden', kind === 'result');
 }
 function closeModal() { modalKind = null; $('#modal').classList.add('hidden'); }
 
-function openShop() {
+const SHOP_TABS = { res: ['mine', 'puits', 'coffre', 'reservoir'], def: ['baliste', 'eclair', 'vent', 'mur'], army: ['nid', 'perchoir'] };
+let shopTab = 'res';
+function openShop(tab) {
+  if (tab) shopTab = tab;
   placing = null; sel = null; renderPanel();
   const L = coreL();
-  const cards = SHOP_ORDER.map((t) => {
+  const cards = SHOP_TABS[shopTab].map((t) => {
     const d = B[t], why = shopBlock(t);
     return `<button class="card ${why ? 'locked' : ''}" data-build="${t}">
-      <img class="ci" src="${Art.thumb('b', t, 1, d.size)}" alt=""><b>${d.name}</b>
-      <small>${countT(t)} / ${LIMITS[t][L]}</small>
-      <span class="cost">${costStr(d.res, d.cost[1])}${d.time[1] ? ' · ⏱ ' + fmtTime(d.time[1]) : ''}</span>
-      ${why ? `<small>🔒 ${why}</small>` : ''}</button>`;
+      <span class="cnt">${countT(t)}/${LIMITS[t][L]}</span>
+      <img class="ci" src="${Models.thumb('b', t, 1)}" alt="">
+      <span class="nm">${d.name}</span>
+      <span class="cost">${costStr(d.res, d.cost[1])}</span>
+      <span class="sub">${why ? '🔒 ' + why : d.time[1] ? '⏱ ' + fmtTime(d.time[1]) : 'Instantané'}</span></button>`;
   }).join('');
-  openModal(`<h2>🛠️ Construire</h2><div class="grid">${cards}</div>`, 'shop');
+  const tabs = [['res', '💎 Ressources'], ['def', '🛡️ Défenses'], ['army', '🪶 Armée']]
+    .map(([k, l]) => `<button class="tab ${k === shopTab ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('');
+  openModal(`<h2>Boutique</h2><div class="tabs">${tabs}</div><div class="grid">${cards}</div>`, 'shop');
 }
 
 function openArmy() {
@@ -1164,48 +946,59 @@ function openArmy() {
 }
 function renderArmy() {
   const cap = armyCap(), used = armySpace(), bl = barracksL();
-  const have = TROOP_ORDER.filter((t) => S.army[t] > 0).map((t) => `<span class="pill"><img src="${Art.thumb('u', t)}" alt=""> × ${S.army[t]}</span>`).join('') || '<small>Aucune troupe prête.</small>';
+  const have = TROOP_ORDER.filter((t) => S.army[t] > 0).map((t) => `<div class="mini"><img src="${Models.thumb('u', t)}" alt=""><b>×${S.army[t]}</b></div>`).join('') || '<span class="empty-txt">Aucune troupe prête.</span>';
   const cards = TROOP_ORDER.map((t) => {
     const d = TROOPS[t], locked = bl < d.unlock;
-    return `<button class="card ${locked ? 'locked' : ''}" data-train="${t}">
-      <img class="ci" src="${Art.thumb('u', t)}" alt=""><b>${d.name}</b>
-      <small>❤️ ${d.hp} · ${d.boom ? '💥 ' + d.boom + ' (x5 murs)' : '💥 ' + d.dps + '/s'} · 👥 ${d.space}</small>
-      <span class="cost">☁️ ${d.cost} · ⏱ ${d.time}s</span>
-      <small>${locked ? '🔒 Perchoir niv ' + d.unlock : d.desc}</small></button>`;
+    return `<button class="card tcard ${RARITY[t]} ${locked ? 'locked' : ''}" data-train="${t}">
+      <span class="drop">${d.space}</span>
+      <img class="ci" src="${Models.thumb('u', t)}" alt="">
+      <span class="nm">${d.name}</span>
+      <span class="cost">${costStr('b', d.cost)} · ⏱ ${d.time}s</span>
+      <span class="sub">❤️ ${d.hp} · ${d.boom ? '💥 ' + d.boom + ' ×5 murs' : '💥 ' + d.dps + '/s'} · 👥 ${d.space}</span>
+      <span class="lvl">${locked ? '🔒 Perchoir niv ' + d.unlock : d.air ? 'Volant' : 'Au sol'}</span></button>`;
   }).join('');
-  const queue = S.queue.map((q, i) => `<button data-cancel="${i}">${TROOPS[q.t].icon} ${i === 0 ? `<small id="q-live">${Math.ceil(q.rem)}s</small>` : ''} ✕</button>`).join('');
-  openModal(`<h2>🐦 Armée</h2>
-    <div>Place dans les Nids : <b>${used} / ${cap}</b></div>
-    <div class="capbar"><i style="width:${cap ? used / cap * 100 : 0}%"></i></div>
+  const queue = S.queue.map((q, i) => `<button class="mini" data-cancel="${i}"><img src="${Models.thumb('u', q.t)}" alt=""><small>✕</small><b>${i === 0 ? `<span id="q-live">${Math.ceil(q.rem)}s</span>` : '…'}</b></button>`).join('');
+  openModal(`<h2>Entraîner des troupes</h2>
+    <div class="capline">Armée <div class="capbar"><i style="width:${cap ? Math.min(100, used / cap * 100) : 0}%"></i></div> ${used}/${cap}</div>
     <div class="army-row">${have}</div>
     ${S.queue.length ? `<h3>En entraînement (touche pour annuler)</h3><div class="queue">${queue}</div>` : ''}
-    <h3>Entraîner</h3><div class="grid">${cards}</div>`, 'army');
+    <h3>Troupes</h3><div class="grid">${cards}</div>`, 'army');
+}
+
+function openLeagues() {
+  const li = leagueIdx(S.glory), next = LEAGUES[li + 1];
+  const rows = LEAGUES.map((l, i) => `<div class="lg ${i === li ? 'on' : ''}">${badge(i, 42)}<span class="nm">${l.n}</span><span>${ico('g')}${l.min}+</span></div>`).reverse().join('');
+  openModal(`<h2>Ligues</h2>
+    <div class="lg-big">${badge(li, 96)}<span>${LEAGUES[li].n}</span><span>${ico('g')}${S.glory}</span>
+    ${next ? `<div class="prog"><i style="width:${(S.glory - LEAGUES[li].min) / (next.min - LEAGUES[li].min) * 100}%"></i></div><small>Encore ${next.min - S.glory} trophées pour la ${next.n}</small>` : '<small>Tu es au sommet du ciel !</small>'}</div>
+    <div class="leagues">${rows}</div>`, 'leagues');
 }
 
 function openSettings() {
-  openModal(`<h2>⚙️ Options</h2>
+  openModal(`<h2>Options</h2>
     <p><b>Îles Célestes</b> — construis ton île volante, entraîne tes troupes et pille les îles voisines.</p>
-    <p>💡 Astuce : regarde la flèche du <b>vent</b> pendant une attaque. Les troupes qui vont dans le sens du vent sont plus rapides !</p>
+    <p>💡 Astuce : regarde la boussole du <b>vent</b> pendant une attaque. Les troupes qui vont dans le sens du vent sont plus rapides !</p>
     <div class="pb"><button class="btn" data-a="help">❓ Comment jouer</button></div>
-    <div class="pb"><button class="btn red" data-a="reset">🗑️ Recommencer une nouvelle partie</button></div>`, 'settings');
+    <div class="pb"><button class="btn red" data-a="reset">🗑️ Nouvelle partie</button></div>`, 'settings');
 }
 
 function openHelp() {
-  openModal(`<h2>🏝️ Bienvenue sur ton île céleste !</h2>
-    <p>Tu es le gardien d'une île qui flotte dans les nuages.</p>
-    <p>⛏️ <b>Récolte</b> les cristaux 💎 et la brume ☁️ en touchant tes mines et tes puits.</p>
-    <p>🛠️ <b>Construis</b> et améliore tes bâtiments. Touche un bâtiment pour le sélectionner, puis fais-le glisser pour le déplacer.</p>
-    <p>🐦 <b>Entraîne</b> des troupes au Perchoir de guerre.</p>
-    <p>⚔️ <b>Attaque</b> d'autres îles : choisis une troupe en bas, puis touche la carte pour la déposer (garde le doigt appuyé pour en déposer plusieurs). Tu ne peux pas déposer dans les zones rouges.</p>
-    <p>🌬️ <b>Le vent</b> change à chaque attaque : les troupes qui l'ont dans le dos vont plus vite !</p>
-    <p>⭐ 50 % de destruction, le Cœur détruit et 100 % : une étoile chacun.</p>
+  openModal(`<h2>Bienvenue, gardien !</h2>
+    <p>Ton île flotte au-dessus des nuages. Fais-la grandir et deviens le plus grand chef du ciel !</p>
+    <p>⛏️ <b>Récolte</b> les cristaux ${ico('c')} et la brume ${ico('b')} en touchant les bulles au-dessus des mines et des puits.</p>
+    <p>🛒 <b>Construis</b> et améliore tes bâtiments. Touche un bâtiment pour le sélectionner, puis fais-le glisser pour le déplacer.</p>
+    <p>🪶 <b>Entraîne</b> des troupes au Perchoir de guerre.</p>
+    <p>⚔️ <b>Attaque</b> d'autres îles : choisis une carte en bas, puis touche le sol pour déposer la troupe (garde le doigt appuyé pour en déposer plusieurs). Pas dans les zones rouges !</p>
+    <p>🌬️ <b>Le vent</b> change à chaque attaque : les troupes qui l'ont dans le dos vont plus vite.</p>
+    <p>⭐ Gagne des étoiles et des trophées ${ico('g')} pour monter de ligue.</p>
     <div class="pb"><button class="btn green" data-a="close">C'est parti !</button></div>`, 'help');
 }
 
 $('#modal').addEventListener('click', (e) => {
-  const el = e.target.closest('[data-a],[data-build],[data-train],[data-cancel]');
+  const el = e.target.closest('[data-a],[data-build],[data-train],[data-cancel],[data-tab]');
   if (!el) { if (e.target === $('#modal') && modalKind !== 'result') closeModal(); return; }
   const ds = el.dataset;
+  if (ds.tab) { openShop(ds.tab); return; }
   if (ds.build) { closeModal(); startPlacing(ds.build); return; }
   if (ds.train) { enqueue(ds.train); return; }
   if (ds.cancel !== undefined) { dequeue(+ds.cancel); return; }
@@ -1213,25 +1006,27 @@ $('#modal').addEventListener('click', (e) => {
   if (a === 'close') { closeModal(); if (!S.welcomed) { S.welcomed = true; save(); } }
   else if (a === 'home') goHome();
   else if (a === 'help') openHelp();
+  else if (a === 'upgrade-m') { closeModal(); startUpgrade(sel); }
   else if (a === 'reset') {
-    openModal(`<h2>🗑️ Recommencer ?</h2><p>Toute ta partie sera effacée : bâtiments, ressources, troupes et trophées.</p>
+    openModal(`<h2>Nouvelle partie ?</h2><p>Toute ta partie sera effacée : bâtiments, ressources, troupes et trophées.</p>
       <div class="pb"><button class="btn red" data-a="reset-yes">Oui, tout effacer</button><button class="btn" data-a="close">Non</button></div>`, 'settings');
   } else if (a === 'reset-yes') {
     S = newGame(); S.welcomed = true; save(); closeModal(); sel = null; placing = null; renderPanel(); topCache = ''; updateTopbar();
   }
 });
 
-$('#btn-shop').addEventListener('click', openShop);
+$('#btn-shop').addEventListener('click', () => openShop());
 $('#btn-army').addEventListener('click', openArmy);
 $('#btn-attack').addEventListener('click', () => startScout(true));
 $('#btn-settings').addEventListener('click', openSettings);
+$('#league-chip').addEventListener('click', openLeagues);
 
 // ----- Interface de combat -----
 function renderTroopbar() {
   const bar = $('#troopbar');
   bar.innerHTML = TROOP_ORDER.filter((t) => S.army[t] > 0 || E.used[t]).map((t) => {
     const n = S.army[t] || 0;
-    return `<button class="troop ${E.sel === t ? 'sel' : ''} ${n ? '' : 'empty'}" data-t="${t}"><span class="n">×${n}</span><img class="e" src="${Art.thumb('u', t)}" alt=""><small>${TROOPS[t].name}</small></button>`;
+    return `<button class="troop ${RARITY[t]} ${E.sel === t ? 'sel' : ''} ${n ? '' : 'empty'}" data-t="${t}"><img src="${Models.thumb('u', t)}" alt=""><span class="n">×${n}</span><small>${TROOPS[t].name}</small></button>`;
   }).join('');
 }
 $('#troopbar').addEventListener('click', (e) => {
@@ -1244,12 +1039,16 @@ $('#troopbar').addEventListener('click', (e) => {
 function renderBattleActions() {
   const box = $('#b-actions');
   if (E.phase === 'scout') {
-    box.innerHTML = `<button class="btn gold" data-a="next">⏭ Île suivante · 💎 ${20 * coreL()}</button><button class="btn red" data-a="leave">🏝️ Rentrer</button>`;
-    $('#b-hint').textContent = 'Touche une zone verte pour déposer une troupe';
+    box.innerHTML = `<button class="btn red" data-a="leave">Rentrer</button><button class="btn gold" data-a="next">Suivant ▶ ${costStr('c', 20 * coreL())}</button>`;
+    $('#b-hint').textContent = 'Touche le sol pour déployer tes troupes !';
     $('#b-hint').classList.remove('hidden');
+    $('#b-timer-lbl').textContent = 'Repérage';
+    $('#b-score').classList.add('hidden');
   } else {
-    box.innerHTML = `<button class="btn red" data-a="surrender">🏳️ Terminer</button>`;
+    box.innerHTML = `<button class="btn red" data-a="surrender">Terminer la bataille</button><span></span>`;
     $('#b-hint').classList.add('hidden');
+    $('#b-timer-lbl').textContent = 'Fin de la bataille dans';
+    $('#b-score').classList.remove('hidden');
   }
 }
 $('#b-actions').addEventListener('click', (e) => {
@@ -1263,9 +1062,10 @@ $('#b-actions').addEventListener('click', (e) => {
 function updateBattleHud() {
   if (!E) return;
   const rem = { c: E.total.c - E.got.c, b: E.total.b - E.got.b };
-  $('#b-info').innerHTML = `<div class="nm">${E.name} · niv ${E.L}</div>
-    <div class="lt">Butin : 💎 ${fmt(rem.c)} · ☁️ ${fmt(rem.b)}</div>
-    <div class="lt">Gagné : 💎 ${fmt(E.got.c)} · ☁️ ${fmt(E.got.b)}</div>`;
+  $('#b-loot').innerHTML = `<div class="nm">${E.name}</div>
+    <small>Butin disponible :</small>
+    <div>${ico('c')}${fmt(rem.c)}</div><div>${ico('b')}${fmt(rem.b)}</div>
+    <small>${badge(leagueIdx(E.glory || 0), 18)} Niveau ${E.L}</small>`;
   $('#b-stars').innerHTML = starsHtml(E.stars);
   $('#b-pct').textContent = E.pct + ' %';
 }
@@ -1276,23 +1076,7 @@ function updateBattleHud() {
 const ptrs = new Map();
 let gest = null;
 
-function pickBuilding(list, sx, sy) {
-  const w = s2w(sx, sy);
-  const sorted = list.slice().sort((a, b) => (b.x + b.y + B[b.t].size) - (a.x + a.y + B[a.t].size));
-  for (const b of sorted) {
-    if (b.dead) continue;
-    const d = B[b.t], s = d.size, h = (b.l === 0 ? 8 : d.h + 10);
-    const [A, Bp, C, D] = footprint(b.x, b.y, s);
-    const poly = [{ x: A.x, y: A.y - h }, { x: Bp.x, y: Bp.y - h }, Bp, C, D, { x: D.x, y: D.y - h }];
-    let inside = false;
-    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-      const pi = poly[i], pj = poly[j];
-      if ((pi.y > w.iy) !== (pj.y > w.iy) && w.ix < (pj.x - pi.x) * (w.iy - pi.y) / (pj.y - pi.y) + pi.x) inside = !inside;
-    }
-    if (inside) return b;
-  }
-  return null;
-}
+function pickBuilding(list, sx, sy) { return R3.pick(list, sx, sy); }
 
 cv.addEventListener('pointerdown', (e) => {
   cv.setPointerCapture(e.pointerId);
@@ -1311,7 +1095,7 @@ cv.addEventListener('pointerdown', (e) => {
   } else if (ptrs.size === 2) {
     if (gest && gest.mode === 'drag' && gest.orig && !placing) { gest.b.x = gest.orig.x; gest.b.y = gest.orig.y; }
     const [a, b] = [...ptrs.values()];
-    gest = { mode: 'pinch', d0: Math.hypot(a.x - b.x, a.y - b.y), z0: cam.z, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, moved: true };
+    gest = { mode: 'pinch', ld: Math.hypot(a.x - b.x, a.y - b.y), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, moved: true };
   }
 });
 
@@ -1323,17 +1107,18 @@ cv.addEventListener('pointermove', (e) => {
     if (ptrs.size < 2) return;
     const [a, b] = [...ptrs.values()];
     const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-    cam.x -= (mx - gest.mx) / cam.z; cam.y -= (my - gest.my) / cam.z;
-    gest.mx = mx; gest.my = my;
-    zoomAt(mx, my, gest.z0 * Math.hypot(a.x - b.x, a.y - b.y) / gest.d0);
+    const d = Math.max(10, Math.hypot(a.x - b.x, a.y - b.y));
+    R3.pan(gest.mx, gest.my, mx, my);
+    R3.zoomAt(mx, my, gest.ld / d);
+    gest.mx = mx; gest.my = my; gest.ld = d;
     return;
   }
   if (e.pointerId !== gest.id) return;
-  const dx = e.clientX - gest.lx, dy = e.clientY - gest.ly;
+  const px = gest.lx, py = gest.ly;
   gest.lx = e.clientX; gest.ly = e.clientY;
   if (!gest.moved && Math.hypot(e.clientX - gest.sx, e.clientY - gest.sy) > 9) gest.moved = true;
   if (!gest.moved) return;
-  if (gest.mode === 'pan') { cam.x -= dx / cam.z; cam.y -= dy / cam.z; clampCam(); }
+  if (gest.mode === 'pan') R3.pan(px, py, e.clientX, e.clientY);
   else if (gest.mode === 'drag') {
     const w = s2w(e.clientX, e.clientY), s = B[gest.b.t].size;
     gest.b.x = clamp(Math.floor(w.x) - gest.ox, 0, N - s);
@@ -1356,7 +1141,7 @@ function pointerEnd(e) {
 }
 cv.addEventListener('pointerup', pointerEnd);
 cv.addEventListener('pointercancel', pointerEnd);
-cv.addEventListener('wheel', (e) => { e.preventDefault(); zoomAt(e.clientX, e.clientY, cam.z * (e.deltaY < 0 ? 1.12 : 0.89)); }, { passive: false });
+cv.addEventListener('wheel', (e) => { e.preventDefault(); R3.zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 0.89 : 1.12); }, { passive: false });
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 
 function onTap(sx, sy, g) {
@@ -1384,7 +1169,7 @@ function frame(t) {
   if (mode === 'battle' && E) battleUpdate(dt);
   for (const f of FX) f.t += dt;
   for (let i = FX.length - 1; i >= 0; i--) if (FX[i].t >= FX[i].max) FX.splice(i, 1);
-  draw(dt);
+  draw3d(dt);
   updateTopbar();
   liveTimer += dt;
   if (liveTimer > 0.25) {
@@ -1398,11 +1183,12 @@ function frame(t) {
 
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 window.addEventListener('pagehide', save);
-window.addEventListener('resize', () => { resize(); clampCam(); });
+window.addEventListener('resize', resize);
 
 // Démarrage
 S = load() || newGame();
-resize(); resetCam(); renderIsland();
+R3.init(cv, { N, isLand, hash });
+resize(); resetCam();
 econTick(); updateTopbar();
 if (!S.welcomed) openHelp();
 requestAnimationFrame(frame);
@@ -1412,5 +1198,5 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 }
 
 // Accès pour les tests / le débogage
-window.__game = { get S() { return S; }, get E() { return E; }, B, TROOPS, startScout, endBattle, deployAt, s2w, iso, cam, get W() { return W; }, get H() { return H; } };
+window.__game = { get S() { return S; }, get E() { return E; }, B, TROOPS, startScout, endBattle, deployAt, s2w, R3, get W() { return W; }, get H() { return H; } };
 })();

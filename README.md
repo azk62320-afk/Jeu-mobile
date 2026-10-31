@@ -6,7 +6,8 @@ des ressources, entraîne une armée et pille les îles voisines.
 
 ## Jouer
 
-Le jeu est en HTML/JavaScript pur, sans dépendances. Il se joue dans le navigateur du téléphone.
+Le jeu est en HTML/JavaScript, en vraie 3D grâce à [Three.js](https://threejs.org) (inclus dans `lib/`).
+Il se joue dans le navigateur du téléphone.
 
 - **En local** : `python3 -m http.server 8000` dans ce dossier, puis ouvre `http://localhost:8000`
   (ou l'adresse IP de l'ordinateur depuis le téléphone, sur le même Wi-Fi).
@@ -32,8 +33,17 @@ produites quand le jeu est fermé.
 - Toucher un bâtiment : le sélectionner (puis le faire glisser pour le déplacer)
 - En attaque : choisir une troupe en bas, toucher la carte pour la déposer, garder le doigt appuyé pour en déposer plusieurs
 
+## Ligues
+
+Les trophées 🏆 gagnés en attaque font monter de ligue : Brise, Rafale, Bourrasque, Tempête,
+Cyclone, Ouragan et enfin Céleste.
+
 ## Fichiers
 
-- `index.html`, `style.css` : l'interface
-- `game.js` : tout le jeu (données, économie, combat, rendu, contrôles)
+- `index.html`, `style.css` : l'interface (police Lilita One)
+- `game.js` : les règles du jeu (économie, combat, ligues, interface, contrôles)
+- `render3d.js` : le moteur 3D (caméra, île flottante, nuages, lumière et ombres, effets, étiquettes)
+- `models.js` : les modèles 3D des bâtiments, des guerriers et du décor
+- `lib/three.min.js` : Three.js r149 (licence MIT)
+- `fonts/` : police Lilita One (licence SIL Open Font License)
 - `manifest.json`, `sw.js`, `icon.svg` : installation sur l'écran d'accueil et jeu hors connexion

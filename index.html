@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-  <meta name="theme-color" content="#4aa3f0">
+  <meta name="theme-color" content="#62b7f5">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Îles Célestes">
@@ -15,44 +15,48 @@
 </head>
 <body>
   <canvas id="cv"></canvas>
+  <div id="labels"></div>
 
-  <!-- Interface du village -->
+  <!-- Village -->
   <div id="hud-village" class="hud">
-    <div id="topbar">
-      <div class="res" id="res-c"><span class="ic">💎</span><div class="txt"><b>0</b><div class="bar"><i></i></div></div></div>
-      <div class="res" id="res-b"><span class="ic">☁️</span><div class="txt"><b>0</b><div class="bar"><i></i></div></div></div>
-      <div class="chip" id="chip-builders">🔨 <b>2/2</b></div>
-      <div class="chip" id="chip-glory">🏆 <b>0</b></div>
-      <button class="chip btn-ico" id="btn-settings">⚙️</button>
+    <div id="tl">
+      <button id="league-chip" class="glass">
+        <span id="league-badge"></span>
+        <span class="lc-txt"><small id="league-name">Sans ligue</small><b><i class="ri ri-g"></i><span id="glory-val">0</span></b></span>
+      </button>
+      <div class="glass chip" id="builders-chip"><span class="e">🔨</span><span><small>Bâtisseurs</small><b id="builders-val">2/2</b></span></div>
+    </div>
+    <div id="tr">
+      <div class="resbar" id="res-c"><div class="track"><i class="fill"></i><b class="val">0</b></div><i class="ri big ri-c"></i><small class="max">Max : 0</small></div>
+      <div class="resbar" id="res-b"><div class="track"><i class="fill"></i><b class="val">0</b></div><i class="ri big ri-b"></i><small class="max">Max : 0</small></div>
+      <button id="btn-settings" class="round small">⚙️</button>
     </div>
     <div id="panel" class="hidden"></div>
     <div id="bottombar">
-      <button id="btn-attack" class="big red"><span class="e">⚔️</span><span>Attaquer</span></button>
-      <button id="btn-army" class="big"><span class="e">🐦</span><span>Armée</span><i class="badge" id="army-badge">0</i></button>
-      <button id="btn-shop" class="big green"><span class="e">🛠️</span><span>Construire</span></button>
+      <button id="btn-attack" class="big attack"><span class="e">⚔️</span><span class="l">Attaquer !</span></button>
+      <div class="spacer"></div>
+      <button id="btn-army" class="big sq"><span class="e">🪶</span><span class="l">Armée</span><i class="badge" id="army-badge">0</i></button>
+      <button id="btn-shop" class="big sq shop"><span class="e">🛒</span><span class="l">Boutique</span></button>
     </div>
   </div>
 
-  <!-- Interface de combat -->
+  <!-- Combat -->
   <div id="hud-battle" class="hud hidden">
-    <div id="b-top">
-      <div id="b-info"></div>
-      <div id="b-right">
-        <div id="b-timer">2:30</div>
-        <div id="b-stars"></div>
-        <div id="b-pct">0 %</div>
-        <div id="b-wind"><span id="wind-arrow">➤</span><small>Vent</small></div>
-      </div>
-    </div>
+    <div id="b-loot" class="glass"></div>
+    <div id="b-timerbox"><small id="b-timer-lbl">Repérage</small><b id="b-timer">2:30</b></div>
+    <div id="b-wind" class="glass"><div class="compass"><span id="wind-arrow">➤</span></div><small>Vent</small></div>
     <div id="b-hint"></div>
+    <div id="b-score"><div id="b-stars"></div><b id="b-pct">0 %</b><small>Destruction</small></div>
     <div id="b-actions"></div>
     <div id="troopbar"></div>
   </div>
 
-  <div id="modal" class="hidden"><div class="box"><button class="close" data-a="close">✕</button><div class="content"></div></div></div>
+  <div id="modal" class="hidden"><div class="box"><div class="head"><h2 class="title"></h2><button class="close" data-a="close">✕</button></div><div class="content"></div></div></div>
   <div id="toast"></div>
 
-  <script src="art.js"></script>
+  <script src="lib/three.min.js"></script>
+  <script src="models.js"></script>
+  <script src="render3d.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
