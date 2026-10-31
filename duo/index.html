@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Duo – le jeu à deux</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'Fredoka',system-ui,sans-serif;color:#fff;background:#1a0b2e;overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+body::before{content:"";position:fixed;inset:-20%;background:radial-gradient(circle at 20% 20%,#ff4f8b55,transparent 45%),radial-gradient(circle at 80% 30%,#7b5cff55,transparent 45%),radial-gradient(circle at 50% 90%,#ff9a3c33,transparent 50%);animation:drift 18s ease-in-out infinite alternate;z-index:-1}
+@keyframes drift{to{transform:translate(4%,-3%) rotate(6deg)}}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;padding:22px 18px;overflow-y:auto}
+.screen.on{display:flex;animation:pop .35s ease}
+@keyframes pop{from{opacity:0;transform:scale(.97)}}
+h1{font-size:56px;font-weight:700;letter-spacing:1px;background:linear-gradient(90deg,#ff7aa8,#ffd27a);-webkit-background-clip:text;background-clip:text;color:transparent;margin-top:6vh}
+.sub{opacity:.8;margin:4px 0 26px;text-align:center}
+.wrap{width:100%;max-width:440px;display:flex;flex-direction:column;gap:12px}
+input{font:inherit;font-size:20px;padding:14px 16px;border-radius:16px;border:2px solid #ffffff22;background:#ffffff12;color:#fff;outline:none;width:100%}
+input:focus{border-color:#ff7aa8}
+label{font-size:14px;opacity:.7;margin-bottom:-6px;padding-left:4px}
+.btn{font:inherit;font-size:20px;font-weight:600;padding:16px;border:none;border-radius:18px;color:#fff;background:linear-gradient(135deg,#ff4f8b,#ff8a5c);box-shadow:0 6px 20px #ff4f8b55;cursor:pointer;transition:transform .1s}
+.btn:active{transform:scale(.96)}
+.btn.ghost{background:#ffffff14;box-shadow:none;border:2px solid #ffffff22}
+.btn.violet{background:linear-gradient(135deg,#7b5cff,#b05cff);box-shadow:0 6px 20px #7b5cff55}
+.btn.green{background:linear-gradient(135deg,#1fc97a,#3be0b0);box-shadow:0 6px 20px #1fc97a44}
+.btn.small{font-size:16px;padding:10px 14px}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.score{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:440px;background:#ffffff10;border-radius:18px;padding:12px 16px;margin-bottom:14px}
+.score .p{text-align:center;flex:1}.score .p b{display:block;font-size:30px}
+.score .p span{font-size:14px;opacity:.8}
+.score .mid{font-size:13px;opacity:.75;text-align:center;flex:1}
+.score .mid b{display:block;font-size:22px;color:#ffd27a}
+.card{background:#ffffff10;border:2px solid #ffffff18;border-radius:22px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:transform .1s;text-align:left}
+.card:active{transform:scale(.97)}
+.card .ic{font-size:38px;width:56px;height:56px;display:grid;place-items:center;border-radius:16px;background:#ffffff14;flex-shrink:0}
+.card h3{font-size:20px;font-weight:600}.card p{font-size:14px;opacity:.75;margin-top:2px}
+.top{width:100%;max-width:440px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.back{font:inherit;background:#ffffff14;border:none;color:#fff;border-radius:12px;padding:8px 14px;font-size:16px}
+.tag{font-size:14px;background:#ffffff18;padding:6px 12px;border-radius:99px}
+.big{width:100%;max-width:440px;flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px}
+.q{font-size:27px;font-weight:600;text-align:center;line-height:1.25;margin-bottom:8px}
+.hint{text-align:center;opacity:.8;font-size:17px}
+.who{text-align:center;font-size:22px}
+.who b{color:#ffd27a}
+.opt{font:inherit;font-size:19px;padding:15px;border-radius:16px;border:2px solid #ffffff22;background:#ffffff10;color:#fff;text-align:left;cursor:pointer}
+.opt:active{transform:scale(.98)}
+.opt.good{background:#1fc97a55;border-color:#1fc97a}
+.opt.bad{background:#ff4f6b55;border-color:#ff4f6b}
+.opt.was{border-color:#ffd27a;border-style:dashed}
+.emoji{font-size:80px;text-align:center}
+.count{font-size:150px;font-weight:700;text-align:center;animation:beat 1s ease infinite}
+@keyframes beat{0%{transform:scale(1.4);opacity:0}30%{transform:scale(1);opacity:1}}
+.tv{display:flex;gap:12px}
+.tv .btn{flex:1;padding:30px 10px;font-size:24px}
+.pill{display:inline-block;margin:0 auto;font-size:15px;padding:6px 14px;border-radius:99px;background:#ffd27a;color:#3a1d00;font-weight:600}
+/* duel */
+#duel{padding:0}
+.half{flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:26px;font-weight:600;text-align:center;position:relative}
+.half.p2{transform:rotate(180deg)}
+.half .nm{font-size:18px;opacity:.85}.half .pts{font-size:40px}
+.half.wait{background:#c2185b}.half.go{background:#1fc97a}.half.win{background:#ffd27a;color:#3a1d00}.half.lose{background:#3a2850}
+.half.idle{background:#2b1a46}
+.mid-bar{height:58px;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#120720;z-index:2}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#fff;color:#1a0b2e;font-weight:600;padding:12px 20px;border-radius:99px;box-shadow:0 8px 30px #0006;display:none;z-index:9;white-space:nowrap}
+.heart{position:fixed;font-size:28px;pointer-events:none;animation:fly 1.6s ease-out forwards;z-index:8}
+@keyframes fly{to{transform:translateY(-60vh) scale(1.6) rotate(20deg);opacity:0}}
+.foot{font-size:13px;opacity:.5;margin-top:14px;text-align:center}
+</style>
+</head>
+<body>
+
+<!-- ACCUEIL -->
+<section class="screen on" id="home">
+  <h1>Duo</h1>
+  <p class="sub">Le jeu à deux, sur un seul téléphone 💞</p>
+  <div class="wrap">
+    <label>Joueur 1</label>
+    <input id="n1" maxlength="14" placeholder="Prénom" autocomplete="off">
+    <label>Joueur 2</label>
+    <input id="n2" maxlength="14" placeholder="Prénom" autocomplete="off">
+    <button class="btn" style="margin-top:14px" onclick="start()">C'est parti !</button>
+  </div>
+  <p class="foot">Asseyez-vous côte à côte, le téléphone entre vous.</p>
+</section>
+
+<!-- MENU -->
+<section class="screen" id="menu">
+  <div class="score" id="scoreMenu"></div>
+  <div class="wrap">
+    <div class="card" onclick="goKnow()"><div class="ic">💘</div><div><h3>Tu me connais ?</h3><p>L'un répond en secret, l'autre devine. 1 point si c'est juste.</p></div></div>
+    <div class="card" onclick="goWho()"><div class="ic">👉</div><div><h3>Qui de nous deux ?</h3><p>À 3, pointez du doigt. Même réponse = point de complicité.</p></div></div>
+    <div class="card" onclick="goTD()"><div class="ic">🎲</div><div><h3>Action ou Vérité</h3><p>Version couple, mignonne et un peu piquante.</p></div></div>
+    <div class="card" onclick="goDuel()"><div class="ic">⚡</div><div><h3>Duel de réflexes</h3><p>Téléphone à plat entre vous. Le plus rapide gagne.</p></div></div>
+    <div class="card" onclick="goWord()"><div class="ic">🧠</div><div><h3>Même longueur d'onde</h3><p>Dites un mot en même temps… jusqu'à dire le même !</p></div></div>
+    <div class="row" style="margin-top:6px">
+      <button class="btn ghost small" onclick="show('home')">Changer les noms</button>
+      <button class="btn violet small" onclick="goEnd()">Voir le bilan 🏆</button>
+    </div>
+  </div>
+</section>
+
+<!-- JEU GÉNÉRIQUE -->
+<section class="screen" id="play">
+  <div class="top"><button class="back" onclick="toMenu()">‹ Menu</button><span class="tag" id="playTag"></span></div>
+  <div class="score" id="scorePlay"></div>
+  <div class="big" id="stage"></div>
+</section>
+
+<!-- DUEL -->
+<section class="screen" id="duel">
+  <div class="half p2 idle" id="h2"></div>
+  <div class="mid-bar"><button class="back" onclick="stopDuel()">‹ Menu</button><span class="tag" id="duelInfo">Premier à 5</span></div>
+  <div class="half p1 idle" id="h1"></div>
+</section>
+
+<!-- BILAN -->
+<section class="screen" id="end">
+  <h1 style="font-size:44px">Bilan</h1>
+  <div class="big" id="endStage"></div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- DONNÉES ----------
+const KNOW = [
+ ["Mon moment préféré de la journée ?",["Le réveil tranquille","Le déjeuner","La fin d'après-midi","La soirée / la nuit"]],
+ ["Si je gagnais 1 million demain, je…",["Voyage autour du monde","Achète une maison","Arrête de travailler","Fais une énorme fête"]],
+ ["Mon super-pouvoir rêvé ?",["Voler","Me téléporter","Lire dans les pensées","Arrêter le temps"]],
+ ["Ce qui m'énerve le plus ?",["Les gens en retard","Le bruit quand je mange / dors","Les gens qui mentent","Attendre"]],
+ ["Mon plat réconfort ?",["Pâtes / pizza","Burger / frites","Un plat de famille","Sucré : gâteau, glace…"]],
+ ["Mon dimanche idéal ?",["Canapé + série toute la journée","Balade / sortie dehors","Grasse mat' + brunch","Voir des amis / la famille"]],
+ ["Face à un film d'horreur, je…",["Adore ça","Regarde entre mes doigts","Fais semblant que ça va","Refuse catégoriquement"]],
+ ["Mon animal totem ?",["Un chat","Un chien","Un paresseux","Un lion / un loup"]],
+ ["En soirée, je suis plutôt…",["Celui/celle qui danse","Celui/celle qui parle à tout le monde","Celui/celle qui part tôt","Celui/celle près du buffet"]],
+ ["Le cadeau qui me ferait le plus plaisir ?",["Un voyage / une expérience","Un objet que je voulais","Un truc fait main","Une lettre / des mots"]],
+ ["Ma plus grande peur parmi celles-ci ?",["Les araignées / insectes","Le vide","Le noir","Parler en public"]],
+ ["Si je devais vivre ailleurs ?",["Au bord de la mer","À la montagne","Dans une grande ville à l'étranger","À la campagne"]],
+ ["Mon défaut principal (honnêtement) ?",["Têtu(e)","Impatient(e)","Désordonné(e)","Toujours en retard"]],
+ ["Quand je suis triste, j'ai besoin…",["D'un câlin","Qu'on me laisse tranquille","De parler","De manger quelque chose de bon"]],
+ ["Mon type de vacances ?",["Plage et farniente","Road trip / aventure","Visite de villes","Ski / montagne"]],
+ ["Ce que je remarque en premier chez quelqu'un ?",["Le sourire","Les yeux","Le style","L'humour"]],
+ ["Ma boisson préférée ?",["Café","Thé / infusion","Soda / jus","Un bon verre (alcool)"]],
+ ["Si je pouvais dîner avec une célébrité ?",["Un(e) acteur/actrice","Un(e) chanteur/chanteuse","Un(e) sportif/sportive","Un personnage historique"]],
+ ["Mon pire réflexe le matin ?",["Snooze 5 fois","Regarder mon téléphone direct","Être de mauvaise humeur","Aucun, je suis en forme"]],
+ ["Notre premier souvenir ensemble, pour moi c'est surtout…",["Le stress","Les rires","Le coup de foudre","Un moment un peu gênant"]],
+ ["Je préfère recevoir…",["Des compliments","Des petits cadeaux","Du temps ensemble","Des câlins / bisous"]],
+ ["Si j'étais un(e) personnage de dessin animé ?",["Un(e) héros/héroïne","Le/la rigolo(te) de la bande","Le/la méchant(e) stylé(e)","Le/la petit(e) mignon(ne)"]],
+ ["Mon talent caché ?",["Cuisiner","Chanter / danser","Imiter les gens","Je n'en ai pas… ou si ?"]],
+ ["Mon genre de film préféré ?",["Comédie","Action / thriller","Romance","Science-fiction / fantastique"]],
+ ["En cas d'apocalypse zombie, je suis…",["Le/la leader","Celui/celle qui se cache","Le/la premier(ère) mordu(e)","Celui/celle qui a un plan"]],
+ ["Ce que je préfère chez toi ?",["Ton humour","Ton physique","Ta gentillesse","Ton intelligence"]],
+ ["Mon rapport à l'argent ?",["Je dépense tout","J'économise tout","Ça dépend des mois","Je ne regarde jamais"]],
+ ["La saison qui me ressemble ?",["Printemps","Été","Automne","Hiver"]],
+ ["Mon application la plus utilisée ?",["Réseaux sociaux","Messagerie","Vidéo / streaming","Jeux"]],
+ ["Si on se disputait, c'est le plus souvent pour…",["Le ménage / le rangement","Le téléphone","Le retard","Des bêtises sans importance"]],
+ ["Mon rêve de gosse ?",["Être célèbre","Un métier héroïque (pompier, médecin…)","Astronaute / pilote","Avoir un animal extraordinaire"]],
+ ["Ce soir, si je pouvais choisir ?",["Restaurant","Cinéma / série","Soirée entre potes","Rester juste tous les deux"]],
+];
+const WHO = [
+ "Qui est le/la plus jaloux(se) ?","Qui a dit « je t'aime » en premier ?","Qui s'endort le plus vite devant un film ?","Qui est le/la plus têtu(e) ?",
+ "Qui ronfle le plus ?","Qui est le/la plus romantique ?","Qui passe le plus de temps sur son téléphone ?","Qui serait le/la premier(ère) à pleurer devant un film ?",
+ "Qui est le/la plus drôle ?","Qui cuisine le mieux ?","Qui est le/la plus dépensier(ère) ?","Qui gagne le plus souvent les disputes ?",
+ "Qui s'excuse en premier après une dispute ?","Qui est le/la plus en retard ?","Qui a le plus mauvais goût musical ?","Qui survivrait le plus longtemps sur une île déserte ?",
+ "Qui est le/la plus câlin(e) ?","Qui est le/la plus bordélique ?","Qui a fait le premier pas ?","Qui est le/la plus gourmand(e) ?",
+ "Qui oublie le plus les dates importantes ?","Qui a le plus de mauvaise foi ?","Qui chante le plus faux ?","Qui est le/la plus peureux(se) ?",
+ "Qui serait le/la meilleur(e) parent ?","Qui prend le plus de temps pour se préparer ?","Qui est le/la plus fêtard(e) ?","Qui rit à ses propres blagues ?",
+ "Qui mange dans l'assiette de l'autre ?","Qui est le/la plus sportif(ve) ?","Qui pique la couverture la nuit ?","Qui est le/la plus susceptible ?",
+ "Qui ferait le meilleur candidat de télé-réalité ?","Qui se perd le plus souvent ?","Qui a le plus de secrets ?","Qui est tombé(e) amoureux(se) en premier ?",
+ "Qui est le/la plus dramatique quand il/elle est malade ?","Qui a le plus de photos de l'autre dans son téléphone ?","Qui choisit toujours le resto ?","Qui craque le premier pour un dessert ?",
+];
+const TRUTH = [
+ "Quelle a été ta toute première impression de moi ?","Quel est le moment où tu as su que tu tenais vraiment à moi ?","Quel est ton souvenir préféré de nous deux ?",
+ "Quelle petite habitude chez moi te fait craquer ?","Quelle petite habitude chez moi t'énerve un peu (sois honnête) ?","Qu'est-ce que tu n'as jamais osé me dire ?",
+ "Quel est le truc le plus gênant que tu aies fait devant moi ?","Si tu pouvais changer une chose dans notre couple, ce serait quoi ?","Quel est ton rêve le plus fou pour nous deux ?",
+ "As-tu déjà été jaloux(se) sans me le dire ? De qui ?","Quel est le plus beau compliment qu'on t'ait fait ?","Quelle partie de mon corps préfères-tu ?",
+ "Quel est le pire cadeau que tu aies reçu (même de moi) ?","Qu'est-ce que tu aimerais qu'on fasse plus souvent ?","Quelle chanson te fait penser à moi ?",
+ "Qu'est-ce que tu as pensé la première fois qu'on s'est embrassés ?","Raconte un mensonge que tu m'as déjà dit (même petit).","Quel est ton plus gros complexe ?",
+ "Qu'est-ce qui te fait te sentir le plus aimé(e) ?","Si on devait partir demain n'importe où, tu choisirais où ?","Quelle tenue préfères-tu sur moi ?",
+ "Quel est ton fantasme de rendez-vous parfait ?","Qu'est-ce que tu admires le plus chez moi ?","Quelle est la chose la plus folle que tu ferais par amour ?",
+ "Dans 10 ans, tu nous imagines comment ?","Quel est le dernier moment où tu as eu envie de m'embrasser ?","Quelle est ta plus grande peur dans une relation ?",
+ "Quel surnom aimerais-tu que je te donne ?","Qu'est-ce que tu as remarqué chez moi que personne d'autre ne voit ?","Quel moment avec moi t'a le plus fait rire ?",
+];
+const DARE = [
+ "Fais-moi un compliment sincère en me regardant dans les yeux pendant 10 secondes.","Imite-moi quand je suis de mauvaise humeur.","Fais-moi un massage des épaules pendant 1 minute.",
+ "Fais une déclaration d'amour façon présentateur télé.","Chante le refrain d'une chanson d'amour (avec conviction !).","Donne-moi 5 bisous à 5 endroits différents (visage, mains…).",
+ "Fais ta meilleure danse de séduction pendant 15 secondes.","Envoie un message à un(e) ami(e) : « J'ai une grande nouvelle… » puis plus rien pendant 5 minutes 😈","Fais-moi rire en moins de 30 secondes, sinon gage.",
+ "Raconte comment on s'est rencontrés comme si c'était un film d'action.","Laisse-moi choisir ta photo de profil pour les prochaines 24h.","Parle avec un accent de ton choix jusqu'à ton prochain tour.",
+ "Fais-moi un câlin de 20 secondes sans rien dire.","Écris un mini poème de 4 lignes sur moi, là, maintenant.","Fais 10 pompes (ou 10 squats) en criant mon prénom.",
+ "Montre-moi la dernière photo de ta galerie.","Murmure-moi quelque chose de mignon à l'oreille.","Mime ce que tu ressens pour moi, sans parler.",
+ "Fais-moi un baisemain digne d'un chevalier.","Laisse-moi lire ton dernier message envoyé.","Dis-moi 3 choses que tu aimes chez moi en moins de 10 secondes.",
+ "Imite un(e) serveur(se) de grand restaurant et propose-moi un « menu » de bisous.","Garde ma main dans la tienne jusqu'à ton prochain tour.","Fais-moi un slow imaginaire, avec musique fredonnée.",
+ "Prends un selfie de nous deux avec la grimace la plus moche possible.","Propose-moi un rendez-vous pour la semaine prochaine, de façon très sérieuse.","Fais semblant de me demander en mariage (version ridicule).",
+ "Fais un bisou esquimau (nez contre nez) pendant 5 secondes.","Raconte une blague. Si je ne ris pas, tu me dois un bisou.","Donne-moi un nouveau surnom et utilise-le jusqu'à la fin du jeu.",
+];
+const WORD_TIPS = ["Un mot au hasard","Un animal","Un pays","Un fruit","Une couleur","Un objet de la maison","Un film","Un métier","Un mot qui fait penser à l'amour","Un truc qu'on trouve à la plage"];
+
+// ---------- ÉTAT ----------
+const S = {n:["Joueur 1","Joueur 2"], sc:[0,0], comp:0, played:0};
+const decks = {};
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+function draw(name,src){if(!decks[name]||!decks[name].length)decks[name]=shuffle(src);return decks[name].pop()}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const N=i=>esc(S.n[i]);
+try{const d=JSON.parse(localStorage.getItem('duo-names')||'null');if(d){$('n1').value=d[0];$('n2').value=d[1]}}catch(e){}
+
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on')}
+function scoreHTML(){return `<div class="p"><b>${S.sc[0]}</b><span>${N(0)}</span></div><div class="mid"><b>💞 ${S.comp}</b>complicité</div><div class="p"><b>${S.sc[1]}</b><span>${N(1)}</span></div>`}
+function refresh(){$('scoreMenu').innerHTML=scoreHTML();$('scorePlay').innerHTML=scoreHTML()}
+function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',1600)}
+function hearts(n=8){for(let i=0;i<n;i++){const h=document.createElement('div');h.className='heart';h.textContent=['💖','💘','💕','✨','💞'][i%5];h.style.left=(10+Math.random()*80)+'vw';h.style.top=(60+Math.random()*30)+'vh';h.style.animationDelay=(Math.random()*.4)+'s';document.body.appendChild(h);setTimeout(()=>h.remove(),2200)}}
+function vib(p){try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
+function point(i){S.sc[i]++;refresh();toast(`+1 pour ${S.n[i]} !`);hearts(5)}
+function comp(){S.comp++;refresh();toast('+1 complicité 💞');hearts(10)}
+
+function start(){
+  S.n=[$('n1').value.trim()||'Joueur 1',$('n2').value.trim()||'Joueur 2'];
+  try{localStorage.setItem('duo-names',JSON.stringify(S.n))}catch(e){}
+  refresh();show('menu');
+}
+function toMenu(){refresh();show('menu')}
+function play(tag,html){$('playTag').textContent=tag;refresh();$('stage').innerHTML=html;if(!$('play').classList.contains('on'))show('play')}
+
+// ---------- TU ME CONNAIS ? ----------
+let K={sub:0,q:null,ans:null,order:null};
+function goKnow(){K.sub=Math.random()<.5?0:1;knowNew()}
+function knowNew(){
+  K.q=draw('know',KNOW);K.order=shuffle([0,1,2,3]);K.ans=null;
+  play('💘 Tu me connais ?',`<div class="emoji">🙈</div><p class="who">Donne le téléphone à <b>${N(K.sub)}</b></p>
+   <p class="hint">${N(1-K.sub)}, ne regarde pas l'écran !</p><button class="btn" onclick="knowSecret()">Je suis ${N(K.sub)}, je regarde</button>`);
+}
+function knowSecret(){
+  const [q,o]=K.q;
+  play('💘 Tu me connais ?',`<p class="hint">Réponds pour toi, en secret 🤫</p><p class="q">${esc(q)}</p>
+   ${K.order.map(i=>`<button class="opt" onclick="knowPick(${i})">${esc(o[i])}</button>`).join('')}`);
+}
+function knowPick(i){K.ans=i;vib(30);
+  play('💘 Tu me connais ?',`<div class="emoji">🔒</div><p class="who">Réponse enregistrée !</p><p class="hint">Passe le téléphone à <b>${N(1-K.sub)}</b></p>
+   <button class="btn violet" onclick="knowGuess()">Je suis ${N(1-K.sub)}, je devine</button>`)}
+function knowGuess(){
+  const [q,o]=K.q;
+  play('💘 Tu me connais ?',`<p class="hint">Qu'a répondu <b>${N(K.sub)}</b> ?</p><p class="q">${esc(q)}</p>
+   ${K.order.map(i=>`<button class="opt" id="ko${i}" onclick="knowReveal(${i})">${esc(o[i])}</button>`).join('')}`)}
+function knowReveal(i){
+  const ok=i===K.ans;S.played++;
+  document.querySelectorAll('#stage .opt').forEach(b=>b.onclick=null);
+  $('ko'+K.ans).classList.add('good');if(!ok)$('ko'+i).classList.add('bad');
+  if(ok){point(1-K.sub);vib([40,40,40])}else vib(200);
+  const msg=ok?`<p class="who">Bravo ! ${N(1-K.sub)} connaît bien ${N(K.sub)} 😍</p>`:`<p class="who">Raté ! 😅 ${N(K.sub)}, explique-toi…</p>`;
+  $('stage').insertAdjacentHTML('beforeend',msg+`<div class="row"><button class="btn ghost" onclick="toMenu()">Menu</button><button class="btn" onclick="K.sub=1-K.sub;knowNew()">Suivant ›</button></div>`);
+}
+
+// ---------- QUI DE NOUS DEUX ? ----------
+function goWho(){whoNew()}
+function whoNew(){
+  const q=draw('who',WHO);
+  play('👉 Qui de nous deux ?',`<p class="hint">Lisez la question à voix haute…</p><p class="q">${esc(q)}</p>
+   <p class="hint">À « GO », pointez tous les deux du doigt la personne qui correspond !</p>
+   <button class="btn" onclick="whoCount()">3… 2… 1…</button>`);
+  window._whoQ=q;
+}
+function whoCount(){
+  let n=3;const tick=()=>{if(n>0){$('stage').innerHTML=`<p class="q" style="opacity:.7">${esc(window._whoQ)}</p><div class="count" key="${n}">${n}</div>`;vib(20);n--;setTimeout(tick,800)}
+   else{vib(150);$('stage').innerHTML=`<div class="count" style="color:#ffd27a">GO 👉</div><p class="q">${esc(window._whoQ)}</p>
+     <p class="hint">Vous avez pointé la même personne ?</p><div class="row"><button class="btn green" onclick="whoRes(1)">Oui 💞</button><button class="btn ghost" onclick="whoRes(0)">Non 😤</button></div>`}};
+  tick();
+}
+function whoRes(ok){S.played++;if(ok)comp();else toast('Débattez-en 30 secondes ! 🗣️');
+  $('stage').innerHTML=`<div class="emoji">${ok?'🥰':'🤨'}</div><p class="who">${ok?'Vous êtes sur la même longueur d\'onde !':'Pas d\'accord… Qui a raison ?'}</p>
+   <div class="row"><button class="btn ghost" onclick="toMenu()">Menu</button><button class="btn" onclick="whoNew()">Suivant ›</button></div>`}
+
+// ---------- ACTION OU VÉRITÉ ----------
+let T={p:0};
+function goTD(){T.p=Math.random()<.5?0:1;tdNew()}
+function tdNew(){
+  play('🎲 Action ou Vérité',`<p class="who">C'est au tour de <b>${N(T.p)}</b></p><p class="hint">Choisis bien…</p>
+   <div class="tv"><button class="btn violet" onclick="tdCard('t')">Vérité 🤫</button><button class="btn" onclick="tdCard('d')">Action 🔥</button></div>
+   <button class="btn ghost small" onclick="tdCard(Math.random()<.5?'t':'d')">Laisser le hasard choisir 🎲</button>`)}
+function tdCard(k){
+  const c=k==='t'?draw('truth',TRUTH):draw('dare',DARE);vib(30);
+  play('🎲 Action ou Vérité',`<span class="pill">${k==='t'?'VÉRITÉ':'ACTION'} pour ${N(T.p)}</span><p class="q">${esc(c)}</p>
+   <p class="hint">C'est ${N(1-T.p)} qui valide !</p>
+   <div class="row"><button class="btn green" onclick="tdRes(1)">Fait ✓</button><button class="btn ghost" onclick="tdRes(0)">Je passe ✗</button></div>`)}
+function tdRes(ok){S.played++;
+  if(ok)point(T.p);else{S.sc[T.p]=Math.max(0,S.sc[T.p]-1);refresh();toast(`-1 pour ${S.n[T.p]} 😈`)}
+  T.p=1-T.p;tdNew()}
+
+// ---------- DUEL ----------
+let D={};
+function goDuel(){
+  D={pts:[0,0],state:'idle',timer:null};show('duel');duelIdle();
+}
+function half(i){return $(i===0?'h1':'h2')}
+function setHalf(i,cls,html){const h=half(i);h.className='half '+(i===1?'p2 ':'p1 ')+cls;h.innerHTML=html}
+function duelIdle(msg){
+  D.state='idle';
+  for(const i of [0,1])setHalf(i,'idle',`<span class="nm">${N(i)}</span><span class="pts">${D.pts[i]}</span><span>${msg?msg[i]:'Touchez tous les deux<br>pour être prêts'}</span>`);
+  D.ready=[false,false];
+}
+function duelTap(i,e){
+  e.preventDefault();
+  if(D.state==='idle'){if(D.ready[i])return;D.ready[i]=true;vib(15);
+    half(i).querySelector('span:last-child').innerHTML='Prêt(e) ✓';
+    if(D.ready[0]&&D.ready[1]){D.state='wait';for(const j of [0,1])setHalf(j,'wait',`<span class="nm">${N(j)}</span><span class="pts">${D.pts[j]}</span><span>Attends le VERT…</span>`);
+      D.timer=setTimeout(()=>{D.state='go';D.t0=performance.now();vib(60);for(const j of [0,1])setHalf(j,'go',`<span style="font-size:60px">TAPE !</span>`)},1500+Math.random()*3500)}
+  }else if(D.state==='wait'){clearTimeout(D.timer);duelWin(1-i,`Faux départ de ${S.n[i]} !`)}
+  else if(D.state==='go'){duelWin(i,`${Math.round(performance.now()-D.t0)} ms`)}
+}
+function duelWin(w,why){
+  D.state='done';D.pts[w]++;vib([50,50,50]);
+  const over=D.pts[w]>=5;
+  setHalf(w,'win',`<span class="nm">${N(w)}</span><span class="pts">${D.pts[w]}</span><span>${over?'🏆 VICTOIRE !':'Gagné ! 🎉'}</span><span class="nm">${esc(why)}</span>`);
+  setHalf(1-w,'lose',`<span class="nm">${N(1-w)}</span><span class="pts">${D.pts[1-w]}</span><span>${over?'Perdu le duel 😭':'Perdu…'}</span><span class="nm">${esc(why)}</span>`);
+  if(over){S.played++;S.sc[w]+=3;refresh();$('duelInfo').textContent=`+3 points pour ${S.n[w]} !`;hearts(14);
+    setTimeout(()=>{D.pts=[0,0];$('duelInfo').textContent='Premier à 5';duelIdle()},3200)}
+  else setTimeout(()=>{if(D.state==='done')duelIdle()},1600);
+}
+$('h1').addEventListener('pointerdown',e=>duelTap(0,e));
+$('h2').addEventListener('pointerdown',e=>duelTap(1,e));
+function stopDuel(){clearTimeout(D.timer);D.state='off';toMenu()}
+
+// ---------- MÊME LONGUEUR D'ONDE ----------
+let W={tries:0};
+function goWord(){W.tries=0;wordIntro()}
+function wordIntro(){
+  play("🧠 Même longueur d'onde",`<p class="q">Le but : dire le <b>même mot</b> en même temps !</p>
+   <p class="hint">1. À « GO », chacun dit un mot à voix haute.<br>2. Ensuite, chacun cherche un mot qui fait le lien entre les deux derniers mots dits.<br>3. On recommence jusqu'à dire le même mot !</p>
+   <p class="hint">Exemple : « chat » + « soleil » → les deux disent « été » 🎉</p>
+   <button class="btn" onclick="wordGo(true)">Premier mot !</button>`)}
+function wordGo(first){
+  W.tries++;let n=3;
+  const tip=first?draw('wtip',WORD_TIPS):'Un mot qui relie vos 2 derniers mots';
+  const tick=()=>{if(n>0){$('stage').innerHTML=`<p class="hint">${esc(tip)}</p><div class="count">${n}</div>`;vib(20);n--;setTimeout(tick,800)}
+   else{vib(150);$('stage').innerHTML=`<div class="count" style="color:#ffd27a;font-size:110px">GO 🗣️</div><p class="hint">Essai n°${W.tries}</p>
+     <p class="who">Vous avez dit le même mot ?</p><div class="row"><button class="btn green" onclick="wordWin()">Oui !! 🎉</button><button class="btn ghost" onclick="wordGo(false)">Non, encore</button></div>`}};
+  tick();
+}
+function wordWin(){S.played++;const pts=W.tries<=3?3:W.tries<=6?2:1;S.comp+=pts;refresh();hearts(16);vib([60,60,60,60]);
+  $('stage').innerHTML=`<div class="emoji">🧠💞🧠</div><p class="q">Connexion réussie en ${W.tries} essai${W.tries>1?'s':''} !</p><p class="who">+${pts} complicité</p>
+   <div class="row"><button class="btn ghost" onclick="toMenu()">Menu</button><button class="btn" onclick="goWord()">Rejouer</button></div>`}
+
+// ---------- BILAN ----------
+function goEnd(){
+  const [a,b]=S.sc;let title,emo;
+  if(a===b){title='Égalité parfaite !';emo='🤝'}else{const w=a>b?0:1;title=`${N(w)} remporte la partie !`;emo='👑'}
+  const c=S.comp;const lvl=c>=12?'Âmes sœurs certifiées 💍':c>=7?'Couple en béton 💪':c>=3?'Belle complicité 💕':'Complicité à travailler… 😏';
+  const loser=a===b?null:(a>b?1:0);
+  const gages=["masse les pieds du gagnant 5 minutes","prépare le petit-déj demain","choisit le film… que le gagnant a choisi","fait la vaisselle ce soir","offre un bisou à la demande pendant 24h"];
+  $('endStage').innerHTML=`<div class="emoji">${emo}</div><p class="q">${title}</p>
+   <div class="score">${scoreHTML()}</div>
+   <p class="who">${lvl}</p>
+   ${loser!==null?`<p class="hint">Gage : <b>${N(loser)}</b> ${gages[Math.random()*gages.length|0]} 😈</p>`:''}
+   <p class="hint">${S.played} manche${S.played>1?'s':''} jouée${S.played>1?'s':''}</p>
+   <button class="btn" onclick="toMenu()">Continuer à jouer</button>
+   <button class="btn ghost" onclick="S.sc=[0,0];S.comp=0;S.played=0;toMenu()">Nouvelle partie</button>`;
+  show('end');hearts(14);
+}
+</script>
+</body>
+</html>
