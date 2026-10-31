@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#4aa3f0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Îles Célestes">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <title>Îles Célestes</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="cv"></canvas>
+
+  <!-- Interface du village -->
+  <div id="hud-village" class="hud">
+    <div id="topbar">
+      <div class="res" id="res-c"><span class="ic">💎</span><div class="txt"><b>0</b><div class="bar"><i></i></div></div></div>
+      <div class="res" id="res-b"><span class="ic">☁️</span><div class="txt"><b>0</b><div class="bar"><i></i></div></div></div>
+      <div class="chip" id="chip-builders">🔨 <b>2/2</b></div>
+      <div class="chip" id="chip-glory">🏆 <b>0</b></div>
+      <button class="chip btn-ico" id="btn-settings">⚙️</button>
+    </div>
+    <div id="panel" class="hidden"></div>
+    <div id="bottombar">
+      <button id="btn-attack" class="big red"><span class="e">⚔️</span><span>Attaquer</span></button>
+      <button id="btn-army" class="big"><span class="e">🐦</span><span>Armée</span><i class="badge" id="army-badge">0</i></button>
+      <button id="btn-shop" class="big green"><span class="e">🛠️</span><span>Construire</span></button>
+    </div>
+  </div>
+
+  <!-- Interface de combat -->
+  <div id="hud-battle" class="hud hidden">
+    <div id="b-top">
+      <div id="b-info"></div>
+      <div id="b-right">
+        <div id="b-timer">2:30</div>
+        <div id="b-stars"></div>
+        <div id="b-pct">0 %</div>
+        <div id="b-wind"><span id="wind-arrow">➤</span><small>Vent</small></div>
+      </div>
+    </div>
+    <div id="b-hint"></div>
+    <div id="b-actions"></div>
+    <div id="troopbar"></div>
+  </div>
+
+  <div id="modal" class="hidden"><div class="box"><button class="close" data-a="close">✕</button><div class="content"></div></div></div>
+  <div id="toast"></div>
+
+  <script src="game.js"></script>
+</body>
+</html>

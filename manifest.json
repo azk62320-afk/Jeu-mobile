@@ -1,0 +1,14 @@
+{
+  "name": "Îles Célestes",
+  "short_name": "Îles Célestes",
+  "description": "Construis ton île volante, entraîne tes troupes et pille les îles voisines.",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#4aa3f0",
+  "theme_color": "#4aa3f0",
+  "lang": "fr",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
