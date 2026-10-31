@@ -1199,7 +1199,10 @@ $('#modal').addEventListener('click', (e) => {
   else if (a === 'home') goHome();
   else if (a === 'help') openHelp();
   else if (a === 'reset') {
-    if (confirm('Effacer ta partie et recommencer ?')) { S = newGame(); S.welcomed = true; save(); closeModal(); sel = null; placing = null; renderPanel(); topCache = ''; updateTopbar(); }
+    openModal(`<h2>🗑️ Recommencer ?</h2><p>Toute ta partie sera effacée : bâtiments, ressources, troupes et trophées.</p>
+      <div class="pb"><button class="btn red" data-a="reset-yes">Oui, tout effacer</button><button class="btn" data-a="close">Non</button></div>`, 'settings');
+  } else if (a === 'reset-yes') {
+    S = newGame(); S.welcomed = true; save(); closeModal(); sel = null; placing = null; renderPanel(); topCache = ''; updateTopbar();
   }
 });
 
