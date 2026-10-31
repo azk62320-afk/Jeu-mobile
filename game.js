@@ -18,72 +18,72 @@ const RES = { c: { icon: '💎', name: 'cristaux' }, b: { icon: '☁️', name: 
 // Bâtiments. Les tableaux sont indexés par niveau (index 0 inutilisé).
 const B = {
   core: {
-    name: "Cœur de l'île", icon: '🔮', size: 3, h: 50, color: '#7c5cff', res: 'c',
+    name: "Cœur de l'île", icon: '🔮', size: 3, h: 95, color: '#7c5cff', res: 'c',
     cost: [0, 0, 1200, 4000, 12000, 30000], time: [0, 0, 60, 240, 600, 1200],
     hp: [0, 1600, 2300, 3100, 4100, 5300],
     desc: "Il fait flotter ton île. L'améliorer débloque de nouveaux bâtiments et niveaux.",
   },
   mine: {
-    name: 'Mine de cristal', icon: '⛏️', size: 2, h: 24, color: '#3fb6dd', res: 'b', prod: 'c',
+    name: 'Mine de cristal', icon: '⛏️', size: 2, h: 48, color: '#3fb6dd', res: 'b', prod: 'c',
     cost: [0, 150, 500, 1400, 3500, 8000], time: [0, 5, 30, 120, 300, 600],
     hp: [0, 320, 380, 450, 530, 620],
     rate: [0, 900, 1800, 3000, 4500, 6600], cap: [0, 600, 1200, 2400, 4000, 6000],
     desc: 'Extrait des cristaux. Touche-la pour récolter.',
   },
   puits: {
-    name: 'Puits de brume', icon: '🌫️', size: 2, h: 24, color: '#b47cff', res: 'c', prod: 'b',
+    name: 'Puits de brume', icon: '🌫️', size: 2, h: 66, color: '#b47cff', res: 'c', prod: 'b',
     cost: [0, 150, 500, 1400, 3500, 8000], time: [0, 5, 30, 120, 300, 600],
     hp: [0, 320, 380, 450, 530, 620],
     rate: [0, 900, 1800, 3000, 4500, 6600], cap: [0, 600, 1200, 2400, 4000, 6000],
     desc: 'Condense la brume des nuages. Touche-le pour récolter.',
   },
   coffre: {
-    name: 'Coffre à cristaux', icon: '🧰', size: 2, h: 30, color: '#e9a15a', res: 'b', store: 'c',
+    name: 'Coffre à cristaux', icon: '🧰', size: 2, h: 42, color: '#e9a15a', res: 'b', store: 'c',
     cost: [0, 300, 900, 2500, 6000, 14000], time: [0, 10, 45, 150, 360, 720],
     hp: [0, 500, 650, 800, 1000, 1250], cap: [0, 1500, 4000, 9000, 18000, 35000],
     desc: 'Augmente la quantité de cristaux que tu peux garder.',
   },
   reservoir: {
-    name: 'Réservoir de brume', icon: '🫙', size: 2, h: 30, color: '#9d5ce0', res: 'c', store: 'b',
+    name: 'Réservoir de brume', icon: '🫙', size: 2, h: 64, color: '#9d5ce0', res: 'c', store: 'b',
     cost: [0, 300, 900, 2500, 6000, 14000], time: [0, 10, 45, 150, 360, 720],
     hp: [0, 500, 650, 800, 1000, 1250], cap: [0, 1500, 4000, 9000, 18000, 35000],
     desc: 'Augmente la quantité de brume que tu peux garder.',
   },
   perchoir: {
-    name: 'Perchoir de guerre', icon: '🪶', size: 3, h: 34, color: '#e2674a', res: 'b',
+    name: 'Perchoir de guerre', icon: '🪶', size: 3, h: 82, color: '#e2674a', res: 'b',
     cost: [0, 200, 800, 2500, 6000, 15000], time: [0, 10, 60, 180, 420, 900],
     hp: [0, 500, 600, 720, 860, 1000],
     desc: 'Entraîne tes troupes. Chaque niveau débloque une nouvelle troupe.',
   },
   nid: {
-    name: 'Nid des troupes', icon: '⛺', size: 3, h: 16, color: '#86b85c', res: 'b',
+    name: 'Nid des troupes', icon: '⛺', size: 3, h: 36, color: '#86b85c', res: 'b',
     cost: [0, 250, 1000, 3000, 7000, 16000], time: [0, 10, 60, 180, 420, 900],
     hp: [0, 400, 480, 560, 650, 750], cap: [0, 20, 30, 40, 50, 60],
     desc: 'Tes troupes y attendent la bataille. Plus de niveau = plus de place.',
   },
   baliste: {
-    name: 'Baliste', icon: '🎯', size: 2, h: 32, color: '#a07a55', res: 'c',
+    name: 'Baliste', icon: '🎯', size: 2, h: 42, color: '#a07a55', res: 'c',
     cost: [0, 250, 900, 2500, 6000, 14000], time: [0, 10, 60, 240, 600, 1200],
     hp: [0, 420, 540, 680, 840, 1020],
     def: { range: 8, dps: [0, 22, 30, 40, 52, 66], rate: 1.2, ground: true, air: false, kind: 'bolt' },
     desc: 'Tire de lourds carreaux très loin. Ne touche pas les troupes volantes.',
   },
   eclair: {
-    name: 'Tour à éclairs', icon: '⚡', size: 2, h: 46, color: '#e8c21c', res: 'c',
+    name: 'Tour à éclairs', icon: '⚡', size: 2, h: 92, color: '#e8c21c', res: 'c',
     cost: [0, 600, 1600, 4000, 9000, 18000], time: [0, 20, 90, 300, 600, 1200],
     hp: [0, 380, 480, 600, 740, 900],
     def: { range: 6, dps: [0, 15, 21, 28, 37, 48], rate: 1, ground: true, air: true, kind: 'zap', chain: 3 },
     desc: "L'éclair rebondit sur plusieurs ennemis. Touche le sol et les airs.",
   },
   vent: {
-    name: 'Canon à vent', icon: '🌀', size: 2, h: 28, color: '#6fb8d8', res: 'c',
+    name: 'Canon à vent', icon: '🌀', size: 2, h: 42, color: '#6fb8d8', res: 'c',
     cost: [0, 1200, 2800, 6000, 12000, 22000], time: [0, 30, 120, 300, 720, 1500],
     hp: [0, 450, 560, 690, 840, 1000],
     def: { range: 5.5, dps: [0, 10, 14, 19, 25, 32], rate: 1.6, ground: true, air: true, kind: 'gust', knock: 1.3 },
     desc: 'Souffle une rafale qui repousse les ennemis en arrière.',
   },
   mur: {
-    name: 'Mur de roc-nuage', icon: '🧱', size: 1, h: 14, color: '#b9c0cc', res: 'c', wall: true,
+    name: 'Mur de roc-nuage', icon: '🧱', size: 1, h: 24, color: '#b9c0cc', res: 'c', wall: true,
     cost: [0, 50, 200, 600, 1500, 4000], time: [0, 0, 0, 0, 0, 0],
     hp: [0, 300, 600, 1100, 1800, 2800],
     desc: 'Bloque les troupes au sol. Se construit instantanément.',
@@ -547,7 +547,7 @@ function unitUpdate(u, dt) {
     u.cd -= dt;
     if (u.cd > 0) return;
     u.cd = d.atk || 1;
-    u.lunge = 0.15;
+    u.lunge = 0.3;
     if (u.t === 'sapeur') {
       for (const w of E.bl) {
         if (w.dead) continue;
@@ -640,6 +640,7 @@ function projUpdate(p, dt) {
     }
     return;
   }
+  p.vx = dx / dist; p.vy = dy / dist;
   p.x += dx / dist * step; p.y += dy / dist * step;
   p.z = tz + (p.z0 - tz) * (Math.max(0, dist - step) / p.d0);
 }
@@ -856,54 +857,50 @@ function bar(x, y, w, frac, col) {
   ctx.fillStyle = col; ctx.fillRect(x - w / 2, y, w * clamp(frac, 0, 1), 4);
 }
 
-function drawBuilding(b, battle) {
+function drawBuilding(b, battle, ctxInfo) {
   const d = B[b.t], s = d.size;
   const c = iso(b.x + s / 2, b.y + s / 2);
   const tf = 1 / cam.z;
   // ombre au sol
-  polyPath(footprint(b.x, b.y, s, 0.02)); ctx.fillStyle = 'rgba(40,70,30,.28)'; ctx.fill();
+  polyPath(footprint(b.x, b.y, s, d.wall ? 0.2 : 0.04)); ctx.fillStyle = 'rgba(40,70,30,.25)'; ctx.fill();
 
   if (!battle && b.l === 0) { // en construction
-    drawBox(b.x, b.y, s, 8, '#b08968');
-    emoji('🏗️', c.x, c.y - 22, 14 + s * 8);
-    text(fmtTime((b.ue - now()) / 1000), c.x, c.y - 44 - s * 4, Math.max(10, 12 * tf), '#ffe27a');
+    Art.building(ctx, b, c.x, c.y, T, { scaffold: true, size: s });
+    text(fmtTime((b.ue - now()) / 1000), c.x, c.y - 50 - s * 4, Math.max(10, 12 * tf), '#ffe27a');
     return;
   }
-  const lv = b.l || 1;
-  const h = d.h + (lv - 1) * 3;
-  const col = d.wall ? shade(d.color, -(lv - 1) * 0.08) : shade(d.color, (lv - 1) * 0.07);
-  drawBox(b.x, b.y, s, h, col, d.wall ? 0.05 : 0.1);
-  if (b.hit > 0) { polyPath(footprint(b.x, b.y, s, 0.1).map((p) => ({ x: p.x, y: p.y - h }))); ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fill(); }
-
-  if (b.t === 'core') { // cristal lumineux
-    const pulse = 0.6 + Math.sin(T * 3) * 0.2;
-    ctx.fillStyle = `rgba(200,170,255,${pulse * 0.5})`;
-    ctx.beginPath(); ctx.ellipse(c.x, c.y - h - 18, 30, 16, 0, 0, 7); ctx.fill();
-    emoji('🔮', c.x, c.y - h - 16 + Math.sin(T * 2) * 3, 40);
-  } else if (!d.wall) {
-    emoji(d.icon, c.x, c.y - h - 8, 12 + s * 9);
-  }
-  if (d.def && battle && b.aim !== undefined) { // petit canon qui vise
-    ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 4;
-    const a = iso(b.x + s / 2 + Math.cos(b.aim) * 0.7, b.y + s / 2 + Math.sin(b.aim) * 0.7);
-    ctx.beginPath(); ctx.moveTo(c.x, c.y - h); ctx.lineTo(a.x, a.y - h); ctx.stroke();
-  }
+  const h = d.h + ((b.l || 1) - 1) * 4;
+  const o = { aim: b.aim ?? (T * 0.4 + b.id * 1.7) };
+  if (d.store) o.fill = battle ? 0.9 : S.res[d.store] / capOf(d.store);
+  if (d.wall && ctxInfo) { o.nU = ctxInfo.walls.has(b.y * N + b.x + 1) && b.x + 1 < N; o.nV = ctxInfo.walls.has((b.y + 1) * N + b.x); }
+  if (b.hit > 0) ctx.globalAlpha = 0.65;
+  Art.building(ctx, b, c.x, c.y, T, o);
+  ctx.globalAlpha = 1;
 
   if (!battle) {
     if (b.ue) {
-      emoji('🔨', c.x + 18, c.y - h - 26 + Math.abs(Math.sin(T * 6)) * -6, 18);
-      text(fmtTime((b.ue - now()) / 1000), c.x, c.y - h - 40, Math.max(10, 12 * tf), '#ffe27a');
+      emoji('🔨', c.x + 18, c.y - h - 20 + Math.abs(Math.sin(T * 6)) * -6, 18);
+      text(fmtTime((b.ue - now()) / 1000), c.x, c.y - h - 36, Math.max(10, 12 * tf), '#ffe27a');
     }
     if (d.prod && b.st >= Math.max(10, d.cap[b.l] * 0.08)) { // bulle de récolte
-      const by = c.y - h - 34 + Math.sin(T * 4 + b.id) * 3;
+      const by = c.y - h - 22 + Math.sin(T * 4 + b.id) * 3;
       ctx.fillStyle = 'rgba(255,255,255,.92)';
       ctx.beginPath(); ctx.arc(c.x, by, 14, 0, 7); ctx.fill();
       ctx.strokeStyle = b.st >= d.cap[b.l] ? '#ff5050' : '#3a62c9'; ctx.lineWidth = 2; ctx.stroke();
       emoji(RES[d.prod].icon, c.x, by + 1, 16);
     }
   } else if (b.hp < b.max) {
-    bar(c.x, c.y - h - 30, 36, b.hp / b.max, b.hp / b.max > 0.5 ? '#6fe06a' : b.hp / b.max > 0.25 ? '#ffd25a' : '#ff5a4a');
+    bar(c.x, c.y - h - 14, d.wall ? 22 : 40, b.hp / b.max, b.hp / b.max > 0.5 ? '#6fe06a' : b.hp / b.max > 0.25 ? '#ffd25a' : '#ff5a4a');
   }
+}
+
+// Décor : arbres et rochers sur les cases libres
+const DECO = [];
+for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+  if (!isLand(x, y)) continue;
+  const h = hash(x * 3.1, y * 7.3);
+  const far = Math.max(Math.abs(x - CENTER), Math.abs(y - CENTER)) >= 6;
+  if ((far && h > 0.86) || h > 0.97) DECO.push({ x, y, kind: h > 0.95 ? 2 : (hash(y, x) > 0.5 ? 1 : 0), seed: hash(x, y * 2) });
 }
 
 function drawRubble(b) {
@@ -917,28 +914,34 @@ function drawRubble(b) {
 }
 
 function drawUnit(u) {
-  const d = TROOPS[u.t], p = iso(u.x, u.y);
-  const lift = u.air ? 36 : 6;
-  const bob = u.moving ? Math.abs(Math.sin(T * 10 + u.ph)) * 3 : 0;
-  const lunge = u.lunge > 0 ? 4 : 0;
-  ctx.fillStyle = 'rgba(0,0,0,.25)';
-  ctx.beginPath(); ctx.ellipse(p.x, p.y, u.air ? 10 : 7, u.air ? 5 : 3.5, 0, 0, 7); ctx.fill();
-  ctx.fillStyle = 'rgba(80,160,255,.55)';
-  ctx.beginPath(); ctx.ellipse(p.x, p.y, 6, 3, 0, 0, 7); ctx.fill();
+  const p = iso(u.x, u.y);
+  const lift = u.air ? 36 : 0;
+  const k = clamp(0.6 / cam.z, 1, 1.8) * (u.t === 'golem' ? 1.1 : 1);
+  ctx.fillStyle = 'rgba(0,0,0,.28)';
+  ctx.beginPath(); ctx.ellipse(p.x, p.y, (u.air ? 14 : 7) * k, (u.air ? 6 : 3.5) * k, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = 'rgba(90,170,255,.8)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.ellipse(p.x, p.y, 8 * k, 4 * k, 0, 0, 7); ctx.stroke();
   ctx.save();
-  ctx.translate(p.x, p.y - lift - bob - lunge + (u.air ? Math.sin(T * 2 + u.ph) * 2 : 0));
-  if (u.face > 0) ctx.scale(-1, 1);
-  if (u.hit > 0) ctx.globalAlpha = 0.6;
-  emoji(d.icon, 0, 0, Math.max(u.air ? 26 : 18, (u.air ? 17 : 13) / cam.z));
+  ctx.translate(p.x, p.y - lift);
+  ctx.scale(u.face < 0 ? -k : k, k);
+  if (u.hit > 0) ctx.globalAlpha = 0.55;
+  Art.unit(ctx, u.t, T + u.ph, u.moving, u.lunge > 0 ? u.lunge / 0.3 : 0);
   ctx.restore();
-  if (u.hp < u.max) bar(p.x, p.y - lift - 18, 18, u.hp / u.max, '#5ab0ff');
+  const top = { plumeur: 31, archere: 33, sapeur: 38, golem: 48, aeronef: 42 }[u.t] || 32;
+  if (u.hp < u.max) bar(p.x, p.y - lift - top * k - 4, 20, u.hp / u.max, '#5ab0ff');
 }
 
 function drawProj(p) {
   const a = iso(p.x, p.y);
   const y = a.y - p.z;
-  if (p.kind === 'bolt') { ctx.fillStyle = '#4a3420'; ctx.beginPath(); ctx.arc(a.x, y, 3.5, 0, 7); ctx.fill(); }
-  else if (p.kind === 'arrow') { ctx.fillStyle = '#fff3c4'; ctx.beginPath(); ctx.arc(a.x, y, 2.2, 0, 7); ctx.fill(); }
+  if (p.kind === 'bolt' || p.kind === 'arrow') {
+    const v = iso(p.x + (p.vx || 0) * 0.5, p.y + (p.vy || 0) * 0.5), dx = v.x - a.x, dy = v.y - a.y, l = Math.hypot(dx, dy) || 1;
+    const len = p.kind === 'bolt' ? 16 : 10;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = p.kind === 'bolt' ? '#5a3d22' : '#7a5230'; ctx.lineWidth = p.kind === 'bolt' ? 3 : 1.5;
+    ctx.beginPath(); ctx.moveTo(a.x - dx / l * len, y - dy / l * len); ctx.lineTo(a.x, y); ctx.stroke();
+    ctx.fillStyle = '#dfe6ee'; ctx.beginPath(); ctx.arc(a.x, y, p.kind === 'bolt' ? 2.5 : 1.5, 0, 7); ctx.fill();
+  }
   else if (p.kind === 'bomb') { ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(a.x, y, 4.5, 0, 7); ctx.fill(); }
   else if (p.kind === 'gust') {
     ctx.strokeStyle = 'rgba(230,250,255,.9)'; ctx.lineWidth = 3;
@@ -1013,13 +1016,25 @@ function draw(dt) {
   if (battle) for (const b of E.bl) if (b.dead) drawRubble(b);
 
   // Tri par profondeur
-  const items = [];
+  const items = [], occ = new Set(), walls = new Set();
+  for (const b of list) {
+    const s = B[b.t].size;
+    for (let j = 0; j < s; j++) for (let i = 0; i < s; i++) occ.add((b.y + j) * N + b.x + i);
+    if (battle && b.dead) continue;
+    if (B[b.t].wall && b.l > 0) walls.add(b.y * N + b.x);
+  }
+  const info = { walls };
   for (const b of list) {
     if (battle && b.dead) continue;
     const s = B[b.t].size;
-    items.push({ d: b.x + b.y + s, f: () => drawBuilding(b, battle) });
+    items.push({ d: b.x + b.y + s, f: () => drawBuilding(b, battle, info) });
   }
-  if (placing) { const b = placing.b, s = B[b.t].size; items.push({ d: b.x + b.y + s, f: () => { ctx.globalAlpha = 0.8; drawBuilding(Object.assign({}, b, { l: 1, ue: 0 }), false); ctx.globalAlpha = 1; } }); }
+  for (const t of DECO) {
+    if (occ.has(t.y * N + t.x)) continue;
+    const c = iso(t.x + 0.5, t.y + 0.5);
+    items.push({ d: t.x + t.y + 1, f: () => Art.deco(ctx, t.kind, c.x, c.y, T, t.seed) });
+  }
+  if (placing) { const b = placing.b, s = B[b.t].size; items.push({ d: b.x + b.y + s + 0.01, f: () => { ctx.globalAlpha = 0.85; drawBuilding(Object.assign({}, b, { l: 1, ue: 0 }), false, info); ctx.globalAlpha = 1; } }); }
   if (battle) for (const u of E.units) items.push({ d: u.x + u.y + (u.air ? 100 : 0), f: () => drawUnit(u) });
   items.sort((a, b) => a.d - b.d);
   for (const it of items) it.f();
@@ -1074,7 +1089,7 @@ function renderPanel() {
   p.classList.remove('hidden');
   if (placing) {
     const t = placing.b.t, d = B[t];
-    p.innerHTML = `<div class="ph"><span class="pi">${d.icon}</span><div><b>${d.name}</b><small>Fais glisser le bâtiment pour le placer</small></div></div>
+    p.innerHTML = `<div class="ph"><img class="pi" src="${Art.thumb('b', t, 1, d.size)}" alt=""><div><b>${d.name}</b><small>Fais glisser le bâtiment pour le placer</small></div></div>
       <div class="pb"><button class="btn green" data-a="place">✔ Construire · ${costStr(d.res, d.cost[1])}</button><button class="btn grey" data-a="cancel">✖</button></div>`;
     return;
   }
@@ -1087,7 +1102,7 @@ function renderPanel() {
   if (d.prod && b.l > 0) btns += `<button class="btn" data-a="collect">Récolter ${RES[d.prod].icon}</button>`;
   if ((b.t === 'perchoir' || b.t === 'nid') && b.l > 0) btns += `<button class="btn" data-a="army">🐦 Armée</button>`;
   btns += `<button class="btn grey" data-a="deselect">✖</button>`;
-  p.innerHTML = `<div class="ph"><span class="pi">${d.icon}</span><div><b>${d.name}</b><small>${b.l === 0 ? 'En construction' : 'Niveau ' + b.l} · ${d.desc}</small></div></div>
+  p.innerHTML = `<div class="ph"><img class="pi" src="${Art.thumb('b', b.t, Math.max(1, b.l), d.size)}" alt=""><div><b>${d.name}</b><small>${b.l === 0 ? 'En construction' : 'Niveau ' + b.l} · ${d.desc}</small></div></div>
     <div class="stats">${b.l > 0 ? statsHtml(b) : ''}</div><div class="live" id="p-live"></div>
     <div class="pb">${btns}</div>`;
   liveUpdate();
@@ -1134,7 +1149,7 @@ function openShop() {
   const cards = SHOP_ORDER.map((t) => {
     const d = B[t], why = shopBlock(t);
     return `<button class="card ${why ? 'locked' : ''}" data-build="${t}">
-      <span class="ci">${d.icon}</span><b>${d.name}</b>
+      <img class="ci" src="${Art.thumb('b', t, 1, d.size)}" alt=""><b>${d.name}</b>
       <small>${countT(t)} / ${LIMITS[t][L]}</small>
       <span class="cost">${costStr(d.res, d.cost[1])}${d.time[1] ? ' · ⏱ ' + fmtTime(d.time[1]) : ''}</span>
       ${why ? `<small>🔒 ${why}</small>` : ''}</button>`;
@@ -1149,11 +1164,11 @@ function openArmy() {
 }
 function renderArmy() {
   const cap = armyCap(), used = armySpace(), bl = barracksL();
-  const have = TROOP_ORDER.filter((t) => S.army[t] > 0).map((t) => `<span class="pill">${TROOPS[t].icon} × ${S.army[t]}</span>`).join('') || '<small>Aucune troupe prête.</small>';
+  const have = TROOP_ORDER.filter((t) => S.army[t] > 0).map((t) => `<span class="pill"><img src="${Art.thumb('u', t)}" alt=""> × ${S.army[t]}</span>`).join('') || '<small>Aucune troupe prête.</small>';
   const cards = TROOP_ORDER.map((t) => {
     const d = TROOPS[t], locked = bl < d.unlock;
     return `<button class="card ${locked ? 'locked' : ''}" data-train="${t}">
-      <span class="ci">${d.icon}</span><b>${d.name}</b>
+      <img class="ci" src="${Art.thumb('u', t)}" alt=""><b>${d.name}</b>
       <small>❤️ ${d.hp} · ${d.boom ? '💥 ' + d.boom + ' (x5 murs)' : '💥 ' + d.dps + '/s'} · 👥 ${d.space}</small>
       <span class="cost">☁️ ${d.cost} · ⏱ ${d.time}s</span>
       <small>${locked ? '🔒 Perchoir niv ' + d.unlock : d.desc}</small></button>`;
@@ -1216,7 +1231,7 @@ function renderTroopbar() {
   const bar = $('#troopbar');
   bar.innerHTML = TROOP_ORDER.filter((t) => S.army[t] > 0 || E.used[t]).map((t) => {
     const n = S.army[t] || 0;
-    return `<button class="troop ${E.sel === t ? 'sel' : ''} ${n ? '' : 'empty'}" data-t="${t}"><span class="n">×${n}</span><span class="e">${TROOPS[t].icon}</span><small>${TROOPS[t].name}</small></button>`;
+    return `<button class="troop ${E.sel === t ? 'sel' : ''} ${n ? '' : 'empty'}" data-t="${t}"><span class="n">×${n}</span><img class="e" src="${Art.thumb('u', t)}" alt=""><small>${TROOPS[t].name}</small></button>`;
   }).join('');
 }
 $('#troopbar').addEventListener('click', (e) => {
